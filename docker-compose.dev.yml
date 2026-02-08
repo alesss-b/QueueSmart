@@ -1,0 +1,16 @@
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: queuesmart_dev
+    environment:
+      - DJANGO_SETTINGS_MODULE=queuesmart.settings.development
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./:/app
+    ports:
+      - "8000:8000"
+    command: sh -c "python manage.py runserver 0.0.0.0:8000 --reload"
+
