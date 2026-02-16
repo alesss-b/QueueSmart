@@ -1,3 +1,14 @@
+FROM node:20 AS nodebuilder
+WORKDIR /app
+
+# Install node deps (reads package.json in repo root)
+COPY package.json package-lock.json* ./
+RUN npm install
+
+# Copy project files needed for Tailwind input and run the build
+COPY . .
+RUN npx tailwindcss -i ./queuesmart/static/src/input.css -o ./queuesmart/static/src/output.css --minify
+
 FROM python:3.13-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1
@@ -7,9 +18,15 @@ RUN apt-get update && apt-get install -y build-essential gcc libpq-dev && rm -rf
 
 WORKDIR /app
 
+# Python dependencies
 COPY requirements.txt /app/
-
 RUN pip install --upgrade pip && pip install --no-cache-dir -r requirements.txt
+
+# Copy application source
+COPY . .
+
+# Overwrite static files with the built output from the node builder stage
+COPY --from=nodebuilder /app/queuesmart/static ./queuesmart/static
 
 EXPOSE 8000
 

@@ -5,11 +5,13 @@
         <meta name="viewport" content="width=device-width,initial-scale=1" /> 
         <meta name="description" content="" /> 
         <link rel="icon" href={% block favicon %}"favicon.ico"{% endblock %} />
-        <link rel="stylesheet" href="style.css">
+        {% load static %}
+        <link rel="stylesheet" href="{% static 'src/output.css' %}">
         <script src="script.js"></script>
     </head> 
-    <body>
+    <body class="flex flex-col items-center">
         {% block nav %} {% include 'components/nav.html' %} {% endblock %}
         {% block body %}{% endblock %}
+        <script src="https://cdn.jsdelivr.net/npm/flowbite@4.0.1/dist/flowbite.min.js"></script>
     </body>
 </html>
