@@ -1,10 +1,45 @@
 {% extends 'components/portal_root.html' %}
 {% block page_title %}Service Ticket Details{% endblock %}
 {% block body %}
-    <h1>This is the service ticket detials page.</h1>
-    <p>Current Queue Position...</p>
-    <p>Current Estimated Wait...</p>
-    <p>Total Time Waited...</p>
-    <p>Ticket Creation Timestamp...</p>
-    <p>Ticket Status...(Fulfilled/Pending/Cancelled)</p>
+    <div class="flex flex-col md:flex-row p-4 gap-4 max-w-full">
+        <div class="relative bg-neutral-primary-soft max-w-xs w-full border border-default rounded-base shadow-xs">
+            <h5 class="p-4 text-2xl font-semibold tracking-tight text-heading leading-8 border-b border-neutral-300">Service Ticket Details</h5>
+            <div class="flex gap-4 w-full px-4">
+                <dl class="max-w-md text-heading divide-y divide-default">
+                    <div class="flex flex-row gap-4 justify-between py-3">
+                        <dt class="mb-1 text-body">Date Opened</dt>
+                        <dd class="text-lg font-medium text-right">Feb 12, 2025 16:20:00</dd>
+                    </div>
+                    <div class="flex flex-row gap-4 justify-between py-3">
+                        <dt class="mb-1 text-body">Date Closed</dt>
+                        <dd class="text-lg font-medium text-right">---</dd>
+                    </div>
+                    <div class="flex flex-row gap-4 justify-between py-3">
+                        <dt class="mb-1 text-body">Service</dt>
+                        <dd class="text-lg font-medium text-right">Deep Cleaning</dd>
+                    </div>
+                    <div class="flex flex-row gap-4 justify-between py-3">
+                        <dt class="mb-1 text-body">Customer</dt>
+                        <dd class="text-lg font-medium text-right">Alex Bradshaw</dd>
+                    </div>
+                    <div class="flex flex-row gap-4 justify-between py-3">
+                        <dt class="mb-1 text-body">Status</dt>
+                        <dd class="text-lg font-medium text-right">Pending</dd>
+                    </div>
+                    <div class="flex flex-row gap-4 justify-between py-3">
+                        <dt class="mb-1 text-body">Current Queue Position</dt>
+                        <dd class="text-lg font-medium text-right">2</dd>
+                    </div>
+                    <div class="flex flex-row gap-4 justify-between py-3">
+                        <dt class="mb-1 text-body">Estimated Wait Time</dt>
+                        <dd class="text-lg font-medium text-right">12 Minutes</dd>
+                    </div>
+                    <div class="flex flex-row gap-4 justify-between py-3">
+                        <dt class="mb-1 text-body">Service Provider</dt>
+                        <dd class="text-lg font-medium text-right">---</dd>
+                    </div>
+                </dl>
+            </div>
+        </div>
+    </div>
 {% endblock %}
