@@ -1,0 +1,100 @@
+{% extends 'components/users_root.html' %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block body %}
+<div class="w-full max-w-5xl px-6 py-10">
+  <div class="flex items-start justify-between gap-6 flex-wrap">
+    <div>
+      <h1 class="text-3xl font-semibold">User Dashboard</h1>
+      <p class="mt-1 text-sm text-slate-600">Overview of your current queue status and services.</p>
+    </div>
+    <div class="flex gap-3">
+<a href="{% url 'notifications' %}" class="rounded-lg border px-4 py-2 hover:bg-slate-50">Notifications</a>
+<a href="{% url 'join_queue' %}" class="rounded-lg bg-slate-900 text-white px-4 py-2 hover:bg-slate-800">Join Queue</a>
+    </div>
+  </div>
+
+  <!-- Top cards -->
+  <div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+    <!-- Current Queue Status -->
+    <div class="rounded-2xl border bg-white p-6 shadow-sm">
+      <h2 class="text-lg font-semibold">Current Queue</h2>
+      <p class="mt-2 text-sm text-slate-600">Service: <span class="font-medium text-slate-900">Financial Aid Office</span></p>
+      <div class="mt-4">
+        <p class="text-sm text-slate-500">Position</p>
+        <p class="text-2xl font-semibold">#4</p>
+      </div>
+      <div class="mt-4">
+        <p class="text-sm text-slate-500">Estimated wait</p>
+        <p class="text-lg font-medium">12 minutes</p>
+      </div>
+      <span class="mt-4 inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">
+        Status: Waiting
+      </span>
+    </div>
+
+    <!-- Active Services -->
+    <div class="rounded-2xl border bg-white p-6 shadow-sm">
+      <h2 class="text-lg font-semibold">Active Services</h2>
+      <p class="mt-1 text-sm text-slate-600">Available to join right now.</p>
+
+      <div class="mt-4 space-y-3">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="font-medium">Financial Aid Office</p>
+            <p class="text-xs text-slate-500">Est. wait: 15 min</p>
+          </div>
+          <button class="rounded-lg bg-slate-900 px-3 py-2 text-sm text-white hover:bg-slate-800">Join</button>
+        </div>
+
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="font-medium">Academic Advising</p>
+            <p class="text-xs text-slate-500">Est. wait: 8 min</p>
+          </div>
+          <button class="rounded-lg bg-slate-900 px-3 py-2 text-sm text-white hover:bg-slate-800">Join</button>
+        </div>
+
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="font-medium">IT Help Desk</p>
+            <p class="text-xs text-slate-500">Est. wait: 20 min</p>
+          </div>
+          <button class="rounded-lg bg-slate-900 px-3 py-2 text-sm text-white hover:bg-slate-800">Join</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Notifications Summary -->
+    <div class="rounded-2xl border bg-white p-6 shadow-sm">
+      <h2 class="text-lg font-semibold">Notifications</h2>
+      <p class="mt-1 text-sm text-slate-600">Latest updates.</p>
+
+      <div class="mt-4 space-y-3 text-sm">
+        <div class="rounded-lg border bg-slate-50 p-3">
+          <p class="font-medium">Queue Update</p>
+          <p class="text-slate-600">You are 2 spots away from being served.</p>
+          <p class="mt-1 text-xs text-slate-500">Just now</p>
+        </div>
+
+        <div class="rounded-lg border bg-slate-50 p-3">
+          <p class="font-medium">Status Change</p>
+          <p class="text-slate-600">Your status changed to “Almost Ready”.</p>
+          <p class="mt-1 text-xs text-slate-500">5 min ago</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick links -->
+  <div class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+<a href="{% url 'queue_status' %}" class="rounded-2xl border bg-white p-6 shadow-sm hover:bg-slate-50">      <h3 class="font-semibold">Queue Status</h3>
+      <p class="mt-1 text-sm text-slate-600">View your live position and updates.</p>
+    </a>
+
+<a href="{% url 'history' %}" class="rounded-2xl border bg-white p-6 shadow-sm hover:bg-slate-50">      <h3 class="font-semibold">History</h3>
+      <p class="mt-1 text-sm text-slate-600">See past queues you joined and outcomes.</p>
+    </a>
+  </div>
+</div>
+{% endblock %}

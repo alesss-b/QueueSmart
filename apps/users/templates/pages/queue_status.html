@@ -1,0 +1,53 @@
+{% extends 'components/users_root.html' %}
+{% block page_title %}Queue Status{% endblock %}
+
+{% block body %}
+<div class="w-full max-w-3xl px-6 py-10">
+  <h1 class="text-3xl font-semibold mb-2">Queue Status</h1>
+  <p class="text-slate-600 mb-8">Live updates about your position in line.</p>
+
+  <div class="rounded-2xl border bg-white p-6 shadow-sm">
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+      <div>
+        <p class="text-sm text-slate-500">Service</p>
+        <p class="text-xl font-semibold">Financial Aid Office</p>
+        <span class="mt-3 inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">
+          Status: Almost Ready
+        </span>
+      </div>
+
+      <div class="grid grid-cols-2 gap-6">
+        <div>
+          <p class="text-sm text-slate-500">Your position</p>
+          <p class="text-3xl font-semibold">#2</p>
+        </div>
+        <div>
+          <p class="text-sm text-slate-500">Estimated wait</p>
+          <p class="text-3xl font-semibold">6m</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-8">
+      <h2 class="text-lg font-semibold">Updates</h2>
+      <div class="mt-3 space-y-3 text-sm">
+        <div class="rounded-lg border bg-slate-50 p-3">
+          <p class="font-medium">Queue Update</p>
+          <p class="text-slate-600">You moved from #4 to #2.</p>
+          <p class="mt-1 text-xs text-slate-500">2 min ago</p>
+        </div>
+        <div class="rounded-lg border bg-slate-50 p-3">
+          <p class="font-medium">Status Change</p>
+          <p class="text-slate-600">You’re almost ready. Please stay nearby.</p>
+          <p class="mt-1 text-xs text-slate-500">Just now</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-8 flex flex-wrap gap-4">
+      <a href="{% url 'dashboard' %}" class="rounded-lg border px-6 py-2.5 hover:bg-slate-100">Back to Dashboard</a>
+      <a href="{% url 'history' %}" class="rounded-lg bg-slate-900 text-white px-6 py-2.5 hover:bg-slate-800">View History</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

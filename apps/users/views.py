@@ -58,8 +58,20 @@ class EmailVerificationView(TemplateView):
     """Email Verification page view."""
     template_name = 'pages/email_verification.html'
 
+class DashboardView(TemplateView):
+    template_name = "pages/dashboard.html"
+
+class JoinQueueView(TemplateView):
+        template_name = "pages/join_queue.html"
+
+class QueueStatusView(TemplateView):
+        template_name = "pages/queue_status.html"
+
+class HistoryView(TemplateView):
+        template_name = "pages/history.html"
 
 def logout_view(request):
     """Log out the user and redirect to the login page."""
     logout(request)
     return redirect('login')
+

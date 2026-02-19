@@ -1,0 +1,47 @@
+{% extends 'components/users_root.html' %}
+{% block page_title %}History{% endblock %}
+
+{% block body %}
+<div class="w-full max-w-5xl px-6 py-10">
+  <h1 class="text-3xl font-semibold mb-2">History</h1>
+  <p class="text-slate-600 mb-8">Past queues you joined (mock data).</p>
+
+  <div class="rounded-2xl border bg-white shadow-sm overflow-hidden">
+    <div class="p-6 border-b">
+      <div class="flex flex-wrap items-center justify-between gap-4">
+        <p class="font-medium">Queue Records</p>
+        <a href="{% url 'dashboard' %}" class="rounded-lg border px-4 py-2 hover:bg-slate-50">Back</a>
+      </div>
+    </div>
+
+    <div class="overflow-x-auto">
+      <table class="w-full text-left text-sm">
+        <thead class="bg-slate-50 text-slate-600">
+          <tr>
+            <th class="px-6 py-3 font-medium">Date</th>
+            <th class="px-6 py-3 font-medium">Service</th>
+            <th class="px-6 py-3 font-medium">Outcome</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y">
+          <tr>
+            <td class="px-6 py-4">Feb 18, 2026</td>
+            <td class="px-6 py-4">Academic Advising</td>
+            <td class="px-6 py-4"><span class="rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-700">Served</span></td>
+          </tr>
+          <tr>
+            <td class="px-6 py-4">Feb 10, 2026</td>
+            <td class="px-6 py-4">IT Help Desk</td>
+            <td class="px-6 py-4"><span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">Left Queue</span></td>
+          </tr>
+          <tr>
+            <td class="px-6 py-4">Jan 30, 2026</td>
+            <td class="px-6 py-4">Financial Aid Office</td>
+            <td class="px-6 py-4"><span class="rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-700">Served</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
