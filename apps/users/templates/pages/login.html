@@ -1,10 +1,75 @@
 {% extends 'components/users_root.html' %}
+
 {% block page_title %}Login{% endblock %}
+
 {% block body %}
-    <h1>This is the login page.</h1>
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Login</button>
+<div class="min-h-[80vh] flex items-center justify-center px-4 py-10">
+  <div class="w-full max-w-md rounded-2xl border bg-white p-6 shadow-sm">
+    <h1 class="text-2xl font-semibold">Welcome back</h1>
+    <p class="mt-1 text-sm text-slate-600">Log in to manage your queues.</p>
+
+    {% if form.errors %}
+      <div class="mt-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+        Please check your email/password and try again.
+      </div>
+    {% endif %}
+
+    <form method="post" class="mt-6 space-y-4" novalidate>
+      {% csrf_token %}
+
+      <!-- Email (username) -->
+      <div>
+        <label for="id_username" class="block text-sm font-medium text-slate-700">Email</label>
+        <input
+          id="id_username"
+          name="username"
+          type="email"
+          required
+          autocomplete="email"
+          placeholder="you@example.com"
+          class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 outline-none focus:border-slate-900"
+          value="{{ form.username.value|default_if_none:'' }}"
+        />
+        <p class="mt-1 text-xs text-slate-500">Email is used as your username.</p>
+      </div>
+
+      <!-- Password -->
+      <div>
+        <label for="id_password" class="block text-sm font-medium text-slate-700">Password</label>
+        <input
+          id="id_password"
+          name="password"
+          type="password"
+          required
+          minlength="6"
+          autocomplete="current-password"
+          placeholder="••••••••"
+          class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 outline-none focus:border-slate-900"
+        />
+        <p class="mt-1 text-xs text-slate-500">Minimum 6 characters.</p>
+      </div>
+
+      <div class="flex items-center justify-between">
+        <label class="flex items-center gap-2 text-sm text-slate-600">
+          <input type="checkbox" class="h-4 w-4 rounded border-slate-300">
+          Remember me
+        </label>
+        <a class="text-sm text-slate-700 underline hover:text-slate-900" href="#">
+          Forgot password?
+        </a>
+      </div>
+
+      <button
+        type="submit"
+        class="w-full rounded-lg bg-slate-900 px-4 py-2.5 font-medium text-white hover:bg-slate-800"
+      >
+        Log in
+      </button>
+
+      <p class="text-center text-sm text-slate-600">
+        Don’t have an account?
+<a class="font-medium text-slate-900 underline" href="{% url 'register' %}">Register</a>      </p>
     </form>
+  </div>
+</div>
 {% endblock %}

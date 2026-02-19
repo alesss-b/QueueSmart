@@ -1,12 +1,92 @@
 {% extends 'components/users_root.html' %}
 {% block page_title %}Register{% endblock %}
+
 {% block body %}
-    <h1>This is the register page.</h1>
-    <form method="post">
-        {% csrf_token %}
-        <label for="name">Name:</label>
-        <input type="text" id="name" name="name">
-        {{ form.as_p }}
-        <button type="submit">Sign Up</button>
-    </form>   
+<div class="min-h-[80vh] flex items-center justify-center px-4 py-10">
+  <div class="w-full max-w-md rounded-2xl border bg-white p-6 shadow-sm">
+    <h1 class="text-2xl font-semibold">Create account</h1>
+    <p class="mt-1 text-sm text-slate-600">Join QueueSmart in seconds.</p>
+
+    {% if form.errors %}
+      <div class="mt-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+        Please fix the highlighted fields and try again.
+      </div>
+    {% endif %}
+
+    <form method="post" class="mt-6 space-y-4" novalidate>
+      {% csrf_token %}
+
+      <!-- Name (required, max 100) -->
+      <div>
+        <label for="id_name" class="block text-sm font-medium text-slate-700">Name</label>
+        <input
+          type="text"
+          id="id_name"
+          name="name"
+          required
+          maxlength="100"
+          placeholder="Your name"
+          class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 outline-none focus:border-slate-900"
+        />
+        <p class="mt-1 text-xs text-slate-500">Max 100 characters.</p>
+      </div>
+
+      <!-- Email (used as username) -->
+      <div>
+        <label for="id_email" class="block text-sm font-medium text-slate-700">Email</label>
+        <input
+          id="id_email"
+          name="email"
+          type="email"
+          required
+          autocomplete="email"
+          placeholder="you@example.com"
+          class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 outline-none focus:border-slate-900"
+        />
+      </div>
+
+      <!-- Password -->
+      <div>
+        <label for="id_password1" class="block text-sm font-medium text-slate-700">Password</label>
+        <input
+          id="id_password1"
+          name="password1"
+          type="password"
+          required
+          minlength="6"
+          autocomplete="new-password"
+          placeholder="••••••••"
+          class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 outline-none focus:border-slate-900"
+        />
+        <p class="mt-1 text-xs text-slate-500">Minimum 6 characters.</p>
+      </div>
+
+      <!-- Confirm Password -->
+      <div>
+        <label for="id_password2" class="block text-sm font-medium text-slate-700">Confirm password</label>
+        <input
+          id="id_password2"
+          name="password2"
+          type="password"
+          required
+          minlength="6"
+          autocomplete="new-password"
+          placeholder="••••••••"
+          class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 outline-none focus:border-slate-900"
+        />
+      </div>
+
+      <button
+        type="submit"
+        class="w-full rounded-lg bg-slate-900 px-4 py-2.5 font-medium text-white hover:bg-slate-800"
+      >
+        Sign up
+      </button>
+
+      <p class="text-center text-sm text-slate-600">
+        Already have an account?
+<a class="font-medium text-slate-900 underline" href="{% url 'login' %}">Log in</a>      </p>
+    </form>
+  </div>
+</div>
 {% endblock %}
