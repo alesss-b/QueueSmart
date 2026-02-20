@@ -1,7 +1,166 @@
 {% extends 'components/users_root.html' %}
 {% block page_title %}Notifications{% endblock %}
+
 {% block body %}
-    <h1>This is the notifications page.</h1>
-    <p>List of notifications inbox (read/unread)...</p>
-    <p>View notification panel...</p>
+<div class="max-w-5xl mx-auto px-6 py-10">
+  <div class="flex items-start justify-between gap-6 flex-wrap">
+    <div>
+      <h1 class="text-3xl font-semibold text-slate-900">Notifications</h1>
+      <p class="mt-1 text-sm text-slate-600">Queue updates and status changes (in-app only).</p>
+    </div>
+
+    <div class="flex gap-3">
+      <button type="button"
+              class="rounded-lg border px-4 py-2 text-sm font-medium hover:bg-slate-50">
+        Mark all as read
+      </button>
+      <button type="button"
+              class="rounded-lg bg-slate-900 text-white px-4 py-2 text-sm font-medium hover:bg-slate-800">
+        Clear all
+      </button>
+    </div>
+  </div>
+
+  <div class="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Inbox -->
+    <div class="lg:col-span-1 rounded-2xl border bg-white shadow-sm overflow-hidden">
+      <div class="px-5 py-4 border-b bg-slate-50">
+        <div class="flex items-center justify-between">
+          <h2 class="text-sm font-semibold text-slate-900">Inbox</h2>
+          <span class="inline-flex items-center rounded-full bg-slate-200 px-2.5 py-1 text-xs font-medium text-slate-700">
+            2 unread
+          </span>
+        </div>
+
+        <div class="mt-3">
+          <input
+            type="text"
+            placeholder="Search notifications..."
+            class="w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
+          />
+        </div>
+      </div>
+
+      <div class="divide-y">
+        <!-- Unread -->
+        <button type="button" class="w-full text-left px-5 py-4 hover:bg-slate-50">
+          <div class="flex items-start justify-between gap-3">
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="inline-block w-2 h-2 rounded-full bg-slate-900"></span>
+                <p class="text-sm font-semibold text-slate-900">Queue Update</p>
+              </div>
+              <p class="mt-1 text-sm text-slate-600">You are 2 spots away from being served.</p>
+              <p class="mt-2 text-xs text-slate-500">Just now • Financial Aid Office</p>
+            </div>
+            <span class="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700">
+              Unread
+            </span>
+          </div>
+        </button>
+
+        <!-- Unread -->
+        <button type="button" class="w-full text-left px-5 py-4 hover:bg-slate-50">
+          <div class="flex items-start justify-between gap-3">
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="inline-block w-2 h-2 rounded-full bg-slate-900"></span>
+                <p class="text-sm font-semibold text-slate-900">Status Change</p>
+              </div>
+              <p class="mt-1 text-sm text-slate-600">Your status changed to “Almost Ready”.</p>
+              <p class="mt-2 text-xs text-slate-500">5 min ago • Academic Advising</p>
+            </div>
+            <span class="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700">
+              Unread
+            </span>
+          </div>
+        </button>
+
+        <!-- Read -->
+        <button type="button" class="w-full text-left px-5 py-4 hover:bg-slate-50">
+          <div class="flex items-start justify-between gap-3">
+            <div>
+              <p class="text-sm font-semibold text-slate-900">Queue Update</p>
+              <p class="mt-1 text-sm text-slate-600">Estimated wait time updated to 12 minutes.</p>
+              <p class="mt-2 text-xs text-slate-500">Yesterday • Financial Aid Office</p>
+            </div>
+            <span class="inline-flex items-center rounded-full bg-slate-50 px-2.5 py-1 text-xs font-medium text-slate-600">
+              Read
+            </span>
+          </div>
+        </button>
+      </div>
+    </div>
+
+    <!-- Notification panel -->
+    <div class="lg:col-span-2 rounded-2xl border bg-white shadow-sm p-6">
+      <div class="flex items-start justify-between gap-6 flex-wrap">
+        <div>
+          <h2 class="text-lg font-semibold text-slate-900">Notification Details</h2>
+          <p class="mt-1 text-sm text-slate-600">Select an item from the inbox to view details.</p>
+        </div>
+        <div class="flex gap-3">
+          <button type="button"
+                  class="rounded-lg border px-4 py-2 text-sm font-medium hover:bg-slate-50">
+            Mark as read
+          </button>
+          <button type="button"
+                  class="rounded-lg border px-4 py-2 text-sm font-medium hover:bg-slate-50">
+            Delete
+          </button>
+        </div>
+      </div>
+
+      <div class="mt-6 rounded-xl border bg-slate-50 p-5">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="inline-flex items-center rounded-full bg-slate-200 px-3 py-1 text-xs font-medium text-slate-700">
+              Queue Update
+            </span>
+            <span class="inline-flex items-center rounded-full bg-slate-200 px-3 py-1 text-xs font-medium text-slate-700">
+              Unread
+            </span>
+          </div>
+          <p class="text-xs text-slate-500">Just now</p>
+        </div>
+
+        <h3 class="mt-4 text-lg font-semibold text-slate-900">You are 2 spots away</h3>
+        <p class="mt-2 text-sm text-slate-700">
+          Your position in the <span class="font-medium">Financial Aid Office</span> queue has improved.
+          Please be ready to approach the desk when called.
+        </p>
+
+        <div class="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div class="rounded-lg bg-white border p-3">
+            <p class="text-xs text-slate-500">Service</p>
+            <p class="text-sm font-medium text-slate-900">Financial Aid Office</p>
+          </div>
+          <div class="rounded-lg bg-white border p-3">
+            <p class="text-xs text-slate-500">Current Position</p>
+            <p class="text-sm font-medium text-slate-900">#2</p>
+          </div>
+          <div class="rounded-lg bg-white border p-3">
+            <p class="text-xs text-slate-500">Estimated Wait</p>
+            <p class="text-sm font-medium text-slate-900">~12 minutes</p>
+          </div>
+        </div>
+
+        <div class="mt-5 flex flex-wrap gap-3">
+          <a href="#"
+             class="rounded-lg bg-slate-900 text-white px-4 py-2 text-sm font-medium hover:bg-slate-800">
+            View Queue Status
+          </a>
+          <a href="#"
+             class="rounded-lg border px-4 py-2 text-sm font-medium hover:bg-slate-50">
+            Dismiss
+          </a>
+        </div>
+      </div>
+
+      <p class="mt-6 text-xs text-slate-500">
+        UI note: This is an in-app notifications mock. Buttons do not persist changes for this assignment.
+      </p>
+    </div>
+  </div>
+</div>
 {% endblock %}

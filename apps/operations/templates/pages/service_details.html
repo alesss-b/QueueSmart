@@ -1,6 +1,8 @@
 {% extends 'components/operations_root.html' %}
-{% block page_title %}Service Details{% endblock %}
+{% block page_title %}Queue Management{% endblock %}
+
 {% block body %}
+<<<<<<< HEAD
     <div class="flex flex-col md:flex-row p-4 gap-4 max-w-full">
         <div class="relative bg-neutral-primary-soft max-w-xs w-full border border-default rounded-base shadow-xs h-fit">
             <h5 class="p-4 text-2xl font-semibold tracking-tight text-heading leading-8 border-b border-neutral-300">Service detials</h5>
@@ -253,3 +255,106 @@
         </div>
     </div>
 {% endblock %}
+=======
+<div class="max-w-6xl mx-auto px-6 py-10">
+  <div class="flex items-start justify-between gap-6 flex-wrap">
+    <div>
+      <h1 class="text-3xl font-semibold text-slate-900">Queue Management</h1>
+      <p class="mt-1 text-sm text-slate-600">View and manage queue order (UI only).</p>
+    </div>
+    <a href="/operations"
+       class="rounded-lg border px-4 py-2 text-sm font-medium hover:bg-slate-50">
+      Back to Dashboard
+    </a>
+  </div>
+
+  <div class="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div class="rounded-2xl border bg-white p-6 shadow-sm lg:col-span-1">
+      <h2 class="text-lg font-semibold text-slate-900">Select Service</h2>
+      <p class="mt-1 text-sm text-slate-600">Pick a service to view its queue.</p>
+
+      <div class="mt-4 space-y-2">
+        <a href="#" class="block rounded-lg border px-4 py-3 hover:bg-slate-50">
+          <div class="font-medium">Financial Aid Office</div>
+          <div class="text-xs text-slate-500">Queue: 12</div>
+        </a>
+        <a href="#" class="block rounded-lg border px-4 py-3 hover:bg-slate-50">
+          <div class="font-medium">Academic Advising</div>
+          <div class="text-xs text-slate-500">Queue: 4</div>
+        </a>
+        <a href="#" class="block rounded-lg border px-4 py-3 hover:bg-slate-50">
+          <div class="font-medium">IT Help Desk</div>
+          <div class="text-xs text-slate-500">Queue: 0</div>
+        </a>
+      </div>
+    </div>
+
+    <div class="rounded-2xl border bg-white p-6 shadow-sm lg:col-span-2">
+      <div class="flex items-start justify-between gap-6 flex-wrap">
+        <div>
+          <h2 class="text-lg font-semibold text-slate-900">Financial Aid Office Queue</h2>
+          <p class="mt-1 text-sm text-slate-600">Reorder/remove users (UI only).</p>
+        </div>
+        <button class="rounded-lg bg-slate-900 text-white px-4 py-2 text-sm font-medium hover:bg-slate-800">
+          Serve Next User
+        </button>
+      </div>
+
+      <div class="mt-6 overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead class="bg-slate-50 text-slate-600">
+            <tr class="border-b">
+              <th class="text-left font-medium px-4 py-3">Position</th>
+              <th class="text-left font-medium px-4 py-3">User</th>
+              <th class="text-left font-medium px-4 py-3">Joined</th>
+              <th class="text-right font-medium px-4 py-3">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="text-slate-900">
+            <tr class="border-b">
+              <td class="px-4 py-3 font-semibold">1</td>
+              <td class="px-4 py-3">user1@example.com</td>
+              <td class="px-4 py-3 text-slate-600">2 min ago</td>
+              <td class="px-4 py-3">
+                <div class="flex justify-end gap-2">
+                  <button class="rounded-lg border px-3 py-2 text-xs font-medium hover:bg-slate-50">Up</button>
+                  <button class="rounded-lg border px-3 py-2 text-xs font-medium hover:bg-slate-50">Down</button>
+                  <button class="rounded-lg border px-3 py-2 text-xs font-medium hover:bg-slate-50">Remove</button>
+                </div>
+              </td>
+            </tr>
+
+            <tr class="border-b">
+              <td class="px-4 py-3 font-semibold">2</td>
+              <td class="px-4 py-3">user2@example.com</td>
+              <td class="px-4 py-3 text-slate-600">6 min ago</td>
+              <td class="px-4 py-3">
+                <div class="flex justify-end gap-2">
+                  <button class="rounded-lg border px-3 py-2 text-xs font-medium hover:bg-slate-50">Up</button>
+                  <button class="rounded-lg border px-3 py-2 text-xs font-medium hover:bg-slate-50">Down</button>
+                  <button class="rounded-lg border px-3 py-2 text-xs font-medium hover:bg-slate-50">Remove</button>
+                </div>
+              </td>
+            </tr>
+
+            <tr>
+              <td class="px-4 py-3 font-semibold">3</td>
+              <td class="px-4 py-3">user3@example.com</td>
+              <td class="px-4 py-3 text-slate-600">12 min ago</td>
+              <td class="px-4 py-3">
+                <div class="flex justify-end gap-2">
+                  <button class="rounded-lg border px-3 py-2 text-xs font-medium hover:bg-slate-50">Up</button>
+                  <button class="rounded-lg border px-3 py-2 text-xs font-medium hover:bg-slate-50">Down</button>
+                  <button class="rounded-lg border px-3 py-2 text-xs font-medium hover:bg-slate-50">Remove</button>
+                </div>
+              </td>
+            </tr>
+
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+>>>>>>> 06eb600 (UI: dashboards, notifications, nav, user pages)

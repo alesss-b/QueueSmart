@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <!DOCTYPE html> <html lang="en">
     <head>
         <meta charset="UTF-8" /> 
@@ -15,3 +16,27 @@
         <script src="https://cdn.jsdelivr.net/npm/flowbite@4.0.1/dist/flowbite.min.js"></script>
     </body>
 </html>
+=======
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>{% block page_title %}QueueSmart{% endblock %}</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="description" content="" />
+
+    <link rel="icon" href="{% block favicon %}{% static 'favicon.ico' %}{% endblock %}">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <link rel="stylesheet" href="{% static 'style.css' %}">
+    <script defer src="{% static 'script.js' %}"></script>
+  </head>
+
+  <body>
+    {% block nav %}{% include 'components/nav.html' %}{% endblock %}
+    {% block body %}{% endblock %}
+  </body>
+</html>
+>>>>>>> 06eb600 (UI: dashboards, notifications, nav, user pages)

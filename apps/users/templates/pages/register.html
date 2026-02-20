@@ -2,6 +2,7 @@
 {% block page_title %}Register{% endblock %}
 
 {% block body %}
+<<<<<<< HEAD
 <div class="min-h-[80vh] flex items-center justify-center px-4 py-10">
   <div class="w-full max-w-md rounded-2xl border bg-white p-6 shadow-sm">
     <h1 class="text-2xl font-semibold">Create account</h1>
@@ -90,3 +91,14 @@
   </div>
 </div>
 {% endblock %}
+=======
+    <h1>Please register your account.</h1>
+    <form method="post">
+        {% csrf_token %}
+        <label for="name">Name:</label>
+        <input type="text" id="name" name="name">
+        {{ form.as_p }}
+        <button type="submit">Sign Up</button>
+    </form>   
+{% endblock %}
+>>>>>>> 06eb600 (UI: dashboards, notifications, nav, user pages)

@@ -1,24 +1,102 @@
 {% extends 'components/operations_root.html' %}
-{% block page_title %}Service Form{% endblock %}
+{% block page_title %}Service Management{% endblock %}
+
 {% block body %}
-    <h1>This is the service form page page.</h1>
-    <p>This is where staff create new services and edit existing ones. Need to detect if editing or creating new Service and change submit button text</p>
-    <form method="post">
-        {% csrf_token %}
-        {% comment %} {{ form.as_p }} This is what we'll use when we actually create the form backend{% endcomment %}
-        <label for="service-name">Service Name:</label>
-        <input type="text" id="service-name" name="service-name">
-        <label for="service-description">Service Description:</label>
-        <textarea name="service-description" id="service-description"></textarea>
-        <label for="expected-duration">Expected Duration (minutes):</label>
-        <input type="number" id="expected-duration" id="expected-duration">
-        <label for="priority-level">Priority Level:</label>
-        <select name="priority-level" id="priority-level">
-            <option value="low">Low</option>
-            <option value="medium">Medium</option>
-            <option value="high">High</option>
-        </select>
-        <button>Back</button>
-        <button type="submit">Create Service/Save Changes</button>
-    </form>  
+<div class="max-w-5xl mx-auto px-6 py-10">
+  <div class="flex items-start justify-between gap-6 flex-wrap">
+    <div>
+      <h1 class="text-3xl font-semibold text-slate-900">Service Management</h1>
+      <p class="mt-1 text-sm text-slate-600">Create or edit services (UI only).</p>
+    </div>
+    <a href="/operations"
+       class="rounded-lg border px-4 py-2 text-sm font-medium hover:bg-slate-50">
+      Back to Dashboard
+    </a>
+  </div>
+
+  <div class="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="rounded-2xl border bg-white p-6 shadow-sm">
+      <h2 class="text-lg font-semibold text-slate-900">Create / Edit Service</h2>
+      <p class="mt-1 text-sm text-slate-600">Form fields are placeholders for now.</p>
+
+      <form class="mt-6 space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-slate-700">Service Name</label>
+          <input maxlength="100" required
+                 class="mt-2 w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
+                 placeholder="e.g., Financial Aid Office">
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-slate-700">Description</label>
+          <textarea required rows="4"
+                    class="mt-2 w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
+                    placeholder="Short description of what this service handles."></textarea>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-slate-700">Expected Duration (minutes)</label>
+            <input type="number" min="1" required
+                   class="mt-2 w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
+                   placeholder="15">
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-slate-700">Priority Level</label>
+            <select required
+                    class="mt-2 w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300">
+              <option value="" selected disabled>Select one</option>
+              <option>Low</option>
+              <option>Medium</option>
+              <option>High</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="flex gap-3 pt-2">
+          <button type="button"
+                  class="rounded-lg bg-slate-900 text-white px-4 py-2 text-sm font-medium hover:bg-slate-800">
+            Save Service
+          </button>
+          <button type="button"
+                  class="rounded-lg border px-4 py-2 text-sm font-medium hover:bg-slate-50">
+            Clear
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <div class="rounded-2xl border bg-white p-6 shadow-sm">
+      <h2 class="text-lg font-semibold text-slate-900">Existing Services</h2>
+      <p class="mt-1 text-sm text-slate-600">Click “Edit” to simulate selecting a service.</p>
+
+      <div class="mt-6 space-y-3">
+        <div class="flex items-center justify-between rounded-xl border p-4">
+          <div>
+            <div class="font-semibold">Financial Aid Office</div>
+            <div class="text-xs text-slate-500">High priority • 15 min</div>
+          </div>
+          <button class="rounded-lg border px-3 py-2 text-xs font-medium hover:bg-slate-50">Edit</button>
+        </div>
+
+        <div class="flex items-center justify-between rounded-xl border p-4">
+          <div>
+            <div class="font-semibold">Academic Advising</div>
+            <div class="text-xs text-slate-500">Medium priority • 10 min</div>
+          </div>
+          <button class="rounded-lg border px-3 py-2 text-xs font-medium hover:bg-slate-50">Edit</button>
+        </div>
+
+        <div class="flex items-center justify-between rounded-xl border p-4">
+          <div>
+            <div class="font-semibold">IT Help Desk</div>
+            <div class="text-xs text-slate-500">Low priority • 20 min</div>
+          </div>
+          <button class="rounded-lg border px-3 py-2 text-xs font-medium hover:bg-slate-50">Edit</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 {% endblock %}

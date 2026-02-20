@@ -1,6 +1,8 @@
 {% extends 'components/users_root.html' %}
 {% block page_title %}User Details{% endblock %}
+
 {% block body %}
+<<<<<<< HEAD
     <div class="flex flex-col md:flex-row gap-4 p-4 max-w-full">
         <!-- User Profile Card -->
         <div class="relative bg-neutral-primary-soft max-w-xs w-full p-6 border border-default rounded-base shadow-xs">
@@ -127,3 +129,92 @@
         </div>
     </div>
 {% endblock %}
+=======
+<div class="max-w-4xl mx-auto px-4 py-10">
+
+  <div class="bg-white rounded-base shadow-md p-6">
+    <div class="flex items-center gap-4">
+      <img class="w-12 h-12 rounded-full object-cover"
+           src="https://via.placeholder.com/96"
+           alt="User avatar">
+
+      <div class="font-medium text-heading">
+        <div class="text-lg leading-6">Your Account</div>
+        <div class="text-sm font-normal text-body">Joined on February 17, 2026</div>
+      </div>
+    </div>
+
+    <div class="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div class="p-4 rounded-base bg-neutral-secondary-soft border border-default-medium">
+        <div class="text-xs uppercase tracking-wide text-body">Email</div>
+        <div class="mt-1 text-sm font-medium text-heading">user@example.com</div>
+      </div>
+
+      <div class="p-4 rounded-base bg-neutral-secondary-soft border border-default-medium">
+        <div class="text-xs uppercase tracking-wide text-body">Account Status</div>
+        <div class="mt-1 text-sm font-medium text-heading">Active</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mt-8 bg-white rounded-base shadow-md p-6">
+    <div class="flex items-center justify-between gap-4">
+      <h2 class="text-lg font-semibold text-heading">Visit / Task History</h2>
+      <div class="text-sm text-body">Showing recent activity</div>
+    </div>
+
+    <div class="mt-4 overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead class="text-body">
+          <tr class="border-b border-default-medium">
+            <th class="text-left font-medium py-3 pr-4">Date</th>
+            <th class="text-left font-medium py-3 pr-4">Queue</th>
+            <th class="text-left font-medium py-3 pr-4">Ticket</th>
+            <th class="text-left font-medium py-3 pr-4">Status</th>
+            <th class="text-left font-medium py-3">Notes</th>
+          </tr>
+        </thead>
+        <tbody class="text-heading">
+          <tr class="border-b border-default-medium">
+            <td class="py-3 pr-4">Feb 10, 2026</td>
+            <td class="py-3 pr-4">Advising</td>
+            <td class="py-3 pr-4">A-104</td>
+            <td class="py-3 pr-4">
+              <span class="inline-flex items-center px-2 py-1 rounded-xs bg-neutral-secondary-medium text-heading text-xs">
+                Completed
+              </span>
+            </td>
+            <td class="py-3">Resolved in 12 minutes</td>
+          </tr>
+
+          <tr class="border-b border-default-medium">
+            <td class="py-3 pr-4">Jan 28, 2026</td>
+            <td class="py-3 pr-4">IT Help Desk</td>
+            <td class="py-3 pr-4">IT-88</td>
+            <td class="py-3 pr-4">
+              <span class="inline-flex items-center px-2 py-1 rounded-xs bg-neutral-secondary-medium text-heading text-xs">
+                No Show
+              </span>
+            </td>
+            <td class="py-3">User did not arrive</td>
+          </tr>
+
+          <tr>
+            <td class="py-3 pr-4">Jan 14, 2026</td>
+            <td class="py-3 pr-4">Financial Aid</td>
+            <td class="py-3 pr-4">F-21</td>
+            <td class="py-3 pr-4">
+              <span class="inline-flex items-center px-2 py-1 rounded-xs bg-neutral-secondary-medium text-heading text-xs">
+                Pending
+              </span>
+            </td>
+            <td class="py-3">Waiting for assignment</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+>>>>>>> 06eb600 (UI: dashboards, notifications, nav, user pages)

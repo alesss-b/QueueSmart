@@ -3,6 +3,7 @@
 {% block page_title %}Login{% endblock %}
 
 {% block body %}
+<<<<<<< HEAD
 <div class="min-h-[80vh] flex items-center justify-center px-4 py-10">
   <div class="w-full max-w-md rounded-2xl border bg-white p-6 shadow-sm">
     <h1 class="text-2xl font-semibold">Welcome back</h1>
@@ -73,3 +74,74 @@
   </div>
 </div>
 {% endblock %}
+=======
+<div class="flex min-h-screen items-center justify-center bg-neutral-secondary-soft px-4">
+    <form method="post"
+          class="w-full max-w-sm bg-white p-6 rounded-base shadow-md">
+
+        {% csrf_token %}
+
+        <h1 class="text-2xl font-semibold text-heading mb-6 text-center">
+            Sign in to your account
+        </h1>
+
+        <div class="mb-5">
+            <label for="id_username"
+                   class="block mb-2.5 text-sm font-medium text-heading">
+                Your email
+            </label>
+
+            <input
+                type="email"
+                name="username"
+                id="id_username"
+                class="bg-neutral-secondary-medium border border-default-medium text-heading text-sm rounded-base focus:ring-brand focus:border-brand block w-full px-3 py-2.5 shadow-xs placeholder:text-body"
+                placeholder="name@flowbite.com"
+                required
+            />
+        </div>
+
+        <div class="mb-5">
+            <label for="id_password"
+                   class="block mb-2.5 text-sm font-medium text-heading">
+                Your password
+            </label>
+
+            <input
+                type="password"
+                name="password"
+                id="id_password"
+                class="bg-neutral-secondary-medium border border-default-medium text-heading text-sm rounded-base focus:ring-brand focus:border-brand block w-full px-3 py-2.5 shadow-xs placeholder:text-body"
+                placeholder="••••••••"
+                required
+            />
+        </div>
+
+       <div class="mt-6">
+  <label for="remember" class="flex items-center gap-2">
+    <input
+      id="remember"
+      type="checkbox"
+      class="w-4 h-4 border border-default-medium rounded-xs bg-neutral-secondary-medium focus:ring-2 focus:ring-brand-soft"
+      required
+    />
+    <span class="text-sm font-medium text-heading select-none">
+      I agree with the
+      <a href="#" class="text-fg-brand hover:underline">terms and conditions</a>.
+    </span>
+  </label>
+
+  <button
+    type="submit"
+    style="display:block; width:10%; margin-top:1rem;"
+    class="mt-4 w-full text-white bg-brand hover:bg-brand-strong focus:ring-4 focus:ring-brand-medium shadow-xs font-medium leading-5 rounded-base text-sm px-6 py-3 focus:outline-none"
+  >
+    Login
+  </button>
+</div>
+    
+
+    </form>
+</div>
+{% endblock %}
+>>>>>>> 06eb600 (UI: dashboards, notifications, nav, user pages)
