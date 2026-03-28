@@ -1,19 +1,20 @@
-<<<<<<< HEAD
 {% load static %}
 <nav class="bg-neutral-primary w-full z-20 top-0 start-0 border-b border-default">
 <div class="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-4">
-<a href="https://flowbite.com/" class="flex items-center space-x-3 rtl:space-x-reverse">
+<a href="/" class="flex items-center space-x-3 rtl:space-x-reverse">
     <img src="https://flowbite.com/docs/images/logo.svg" class="h-7" alt="QueueSmart Logo" />
     <span class="self-center text-xl text-heading font-semibold whitespace-nowrap">QueueSmart</span>
 </a>
 <div class="flex items-center md:order-2 space-x-3 md:space-x-0 rtl:space-x-reverse">
     {% if user.is_authenticated %}
         <div class="flex items-center md:order-2 space-x-3 md:space-x-0 rtl:space-x-reverse">
+            <a href="{% url 'notifications' %}" class="hidden md:inline-flex text-sm text-body hover:text-heading px-3 py-2">
+                Notifications
+            </a>
             <button type="button" class="flex text-sm bg-neutral-primary rounded-full md:me-0 focus:ring-4 focus:ring-neutral-tertiary" id="user-menu-button" aria-expanded="false" data-dropdown-toggle="user-dropdown" data-dropdown-placement="bottom">
                 <span class="sr-only">Open user menu</span>
                 <img class="w-8 h-8 rounded-full" src="https://100k-faces.vercel.app/api/random-image" alt="user photo">
             </button>
-            <!-- Dropdown menu -->
             <div class="z-50 hidden bg-neutral-primary-medium border border-default-medium rounded-base shadow-lg w-44" id="user-dropdown">
                 <div class="px-4 py-3 text-sm border-b border-default">
                 <span class="block text-heading font-medium">{{ user.first_name }} {{ user.last_name }}</span>
@@ -22,6 +23,9 @@
                 <ul class="p-2 text-sm text-body font-medium" aria-labelledby="user-menu-button">
                 <li>
                     <a href="#" class="inline-flex items-center w-full p-2 hover:bg-neutral-tertiary-medium hover:text-heading rounded">Dashboard</a>
+                </li>
+                <li>
+                    <a href="{% url 'notifications' %}" class="inline-flex items-center w-full p-2 hover:bg-neutral-tertiary-medium hover:text-heading rounded">Notifications</a>
                 </li>
                 <li>
                     <a href="{% url 'user_details'%}" class="inline-flex items-center w-full p-2 hover:bg-neutral-tertiary-medium hover:text-heading rounded">Profile</a>
@@ -48,55 +52,3 @@
 </div>
 </div>
 </nav>
-
-=======
-<nav class="border-b bg-white">
-  <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-
-    <!-- Brand -->
-    <a href="/"
-       class="rounded-lg bg-slate-900 text-white px-4 py-2 text-lg font-semibold hover:bg-slate-800">
-      QueueSmart
-    </a>
-
-    <!-- Links -->
-    <div class="flex items-center gap-6">
-      {% block nav_links %}{% endblock %}
-
-      <a href="{% url 'notifications' %}"
-         class="text-sm font-medium text-slate-600 hover:text-slate-900">
-        Notifications
-      </a>
-
-      {% if user.is_authenticated %}
-        <a href="{% url 'user_details' %}"
-           class="text-sm font-medium text-slate-600 hover:text-slate-900">
-          {{ user }}
-        </a>
-
-        <a href="{% url 'logout' %}"
-           class="rounded-lg border px-3 py-2 text-sm font-medium hover:bg-slate-50">
-          Logout
-        </a>
-      {% else %}
-        <a href="{% url 'login' %}"
-           class="text-sm font-medium text-slate-600 hover:text-slate-900">
-          Login
-        </a>
-
-        <a href="{% url 'register' %}"
-           class="rounded-lg bg-slate-900 text-white px-3 py-2 text-sm font-medium hover:bg-slate-800">
-          Register
-        </a>
-      {% endif %}
-    </div>
-
-  </div>
-</nav>
-
-{% if not user.is_authenticated %}
-  <div class="max-w-7xl mx-auto px-6 py-4 text-sm text-slate-600">
-    Sign in or create an account.
-  </div>
-{% endif %}
->>>>>>> 06eb600 (UI: dashboards, notifications, nav, user pages)

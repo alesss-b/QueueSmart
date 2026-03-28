@@ -6,6 +6,8 @@ from django.contrib.auth import login, logout
 from django.urls import reverse_lazy
 from django.shortcuts import redirect
 
+from queuesmart.in_memory import NOTIFICATIONS
+
 
 class UsersView(LoginRequiredMixin, TemplateView):
     """Users page view; redirects to login if not authenticated."""
@@ -50,6 +52,25 @@ class NotificationsView(TemplateView):
     """Notifications page view."""
     template_name = 'pages/notifications.html'
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        notifications = [
+            {
+                **notification,
+                "notification_type_label": notification["notification_type"].replace("_", " ").title(),
+            }
+            for notification in NOTIFICATIONS
+        ]
+        if self.request.user.is_authenticated:
+            notifications = [
+                notification for notification in notifications
+                if notification["recipient_name"] in {self.request.user.username, self.request.user.get_full_name().strip()}
+            ] or notifications
+        context["notifications"] = notifications
+        context["unread_count"] = sum(1 for notification in notifications if not notification["is_read"])
+        context["selected_notification"] = notifications[0] if notifications else None
+        return context
+
 class UserDetailsView(TemplateView):
     """User Details page view."""
     template_name = 'pages/user_details.html'
@@ -74,4 +95,3 @@ def logout_view(request):
     """Log out the user and redirect to the login page."""
     logout(request)
     return redirect('login')
-

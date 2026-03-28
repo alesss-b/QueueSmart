@@ -1,3 +1,3 @@
 from django.db import models
 
-# Create your models here.
+# In-memory data is used for this assignment. No database models required here.

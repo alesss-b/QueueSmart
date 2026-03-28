@@ -2,7 +2,6 @@
 {% block page_title %}Register{% endblock %}
 
 {% block body %}
-<<<<<<< HEAD
 <div class="min-h-[80vh] flex items-center justify-center px-4 py-10">
   <div class="w-full max-w-md rounded-2xl border bg-white p-6 shadow-sm">
     <h1 class="text-2xl font-semibold">Create account</h1>
@@ -17,7 +16,6 @@
     <form method="post" class="mt-6 space-y-4" novalidate>
       {% csrf_token %}
 
-      <!-- Name (required, max 100) -->
       <div>
         <label for="id_name" class="block text-sm font-medium text-slate-700">Name</label>
         <input
@@ -32,7 +30,6 @@
         <p class="mt-1 text-xs text-slate-500">Max 100 characters.</p>
       </div>
 
-      <!-- Email (used as username) -->
       <div>
         <label for="id_email" class="block text-sm font-medium text-slate-700">Email</label>
         <input
@@ -46,7 +43,6 @@
         />
       </div>
 
-      <!-- Password -->
       <div>
         <label for="id_password1" class="block text-sm font-medium text-slate-700">Password</label>
         <input
@@ -62,7 +58,6 @@
         <p class="mt-1 text-xs text-slate-500">Minimum 6 characters.</p>
       </div>
 
-      <!-- Confirm Password -->
       <div>
         <label for="id_password2" class="block text-sm font-medium text-slate-700">Confirm password</label>
         <input
@@ -86,19 +81,9 @@
 
       <p class="text-center text-sm text-slate-600">
         Already have an account?
-<a class="font-medium text-slate-900 underline" href="{% url 'login' %}">Log in</a>      </p>
+        <a class="font-medium text-slate-900 underline" href="{% url 'login' %}">Log in</a>
+      </p>
     </form>
   </div>
 </div>
 {% endblock %}
-=======
-    <h1>Please register your account.</h1>
-    <form method="post">
-        {% csrf_token %}
-        <label for="name">Name:</label>
-        <input type="text" id="name" name="name">
-        {{ form.as_p }}
-        <button type="submit">Sign Up</button>
-    </form>   
-{% endblock %}
->>>>>>> 06eb600 (UI: dashboards, notifications, nav, user pages)
