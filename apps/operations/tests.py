@@ -2,20 +2,13 @@ import json
 
 from django.test import Client, TestCase
 
-from apps.operations.models import Service
-from queuesmart.in_memory import NOTIFICATIONS, QUEUE_ENTRIES, QUEUE_HISTORY
+from apps.operations.models import Queue, QueueEntry, Service
+from apps.users.models import Notification
 
 
 class QueueManagementTests(TestCase):
     def setUp(self):
         self.client = Client()
-
-        # clear in-memory state still used by queue/notifications/history
-        QUEUE_ENTRIES.clear()
-        QUEUE_HISTORY.clear()
-        NOTIFICATIONS.clear()
-
-        # create real database-backed services
         self.advising = Service.objects.create(
             name="Academic Advising",
             description="Help with course planning.",
@@ -38,9 +31,10 @@ class QueueManagementTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["data"]["position"], 1)
-        self.assertEqual(len(QUEUE_ENTRIES), 1)
-        self.assertEqual(NOTIFICATIONS[0]["notification_type"], "close_to_served")
-        self.assertEqual(NOTIFICATIONS[1]["notification_type"], "queue_joined")
+        self.assertEqual(QueueEntry.objects.count(), 1)
+        notifications = list(Notification.objects.order_by("-created_at", "-id"))
+        self.assertEqual(notifications[0].notification_type, "close_to_served")
+        self.assertEqual(notifications[1].notification_type, "queue_joined")
 
     def test_join_queue_missing_fields(self):
         response = self.client.post(
@@ -64,8 +58,8 @@ class QueueManagementTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(QUEUE_ENTRIES), 0)
-        self.assertEqual(QUEUE_HISTORY[0]["status"], "left")
+        self.assertEqual(QueueEntry.objects.filter(status=QueueEntry.Status.WAITING).count(), 0)
+        self.assertEqual(QueueEntry.objects.get(user_name="Cordai").status, QueueEntry.Status.CANCELED)
 
     def test_view_queue_filters_by_service(self):
         self.client.post(
@@ -111,12 +105,11 @@ class QueueManagementTests(TestCase):
         self.assertEqual(response.json()["served_user"]["user"], "Cordai")
         self.assertEqual(response.json()["remaining_queue"][0]["position"], 1)
         self.assertTrue(
-            any(
-                notification["recipient_name"] == "Amara"
-                and notification["notification_type"] == "close_to_served"
-                and notification["metadata"]["position"] == 1
-                for notification in NOTIFICATIONS
-            )
+            Notification.objects.filter(
+                recipient_name="Amara",
+                notification_type="close_to_served",
+                metadata__position=1,
+            ).exists()
         )
 
     def test_estimate_wait_time_uses_service_duration(self):
@@ -152,7 +145,8 @@ class ServiceManagementTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 302)
-        self.assertTrue(Service.objects.filter(name="Registrar").exists())
+        service = Service.objects.get(name="Registrar")
+        self.assertTrue(Queue.objects.filter(service=service, status="open").exists())
 
     def test_update_service(self):
         existing_service = Service.objects.create(
@@ -179,5 +173,3 @@ class ServiceManagementTests(TestCase):
         self.assertEqual(existing_service.description, "Updated description")
         self.assertEqual(existing_service.expected_duration, 18)
         self.assertEqual(existing_service.priority, 3)
-        
-# last updated: 2026-04-10 1:59 PM

@@ -19,18 +19,22 @@
     <!-- Current Queue Status -->
     <div class="rounded-2xl border bg-white p-6 shadow-sm">
       <h2 class="text-lg font-semibold">Current Queue</h2>
-      <p class="mt-2 text-sm text-slate-600">Service: <span class="font-medium text-slate-900">Financial Aid Office</span></p>
+      {% if current_entry %}
+      <p class="mt-2 text-sm text-slate-600">Service: <span class="font-medium text-slate-900">{{ current_entry.queue.service.name }}</span></p>
       <div class="mt-4">
         <p class="text-sm text-slate-500">Position</p>
-        <p class="text-2xl font-semibold">#4</p>
+        <p class="text-2xl font-semibold">#{{ current_entry.position }}</p>
       </div>
       <div class="mt-4">
         <p class="text-sm text-slate-500">Estimated wait</p>
-        <p class="text-lg font-medium">12 minutes</p>
+        <p class="text-lg font-medium">{{ estimated_wait }} minutes</p>
       </div>
       <span class="mt-4 inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">
-        Status: Waiting
+        Status: {{ current_entry.get_status_display }}
       </span>
+      {% else %}
+      <p class="mt-2 text-sm text-slate-600">You are not currently waiting in a queue.</p>
+      {% endif %}
     </div>
 
     <!-- Active Services -->
@@ -39,29 +43,17 @@
       <p class="mt-1 text-sm text-slate-600">Available to join right now.</p>
 
       <div class="mt-4 space-y-3">
+        {% for service in active_services %}
         <div class="flex items-center justify-between">
           <div>
-            <p class="font-medium">Financial Aid Office</p>
-            <p class="text-xs text-slate-500">Est. wait: 15 min</p>
+            <p class="font-medium">{{ service.name }}</p>
+            <p class="text-xs text-slate-500">Est. duration: {{ service.expected_duration }} min</p>
           </div>
           <button class="rounded-lg bg-slate-900 px-3 py-2 text-sm text-white hover:bg-slate-800">Join</button>
         </div>
-
-        <div class="flex items-center justify-between">
-          <div>
-            <p class="font-medium">Academic Advising</p>
-            <p class="text-xs text-slate-500">Est. wait: 8 min</p>
-          </div>
-          <button class="rounded-lg bg-slate-900 px-3 py-2 text-sm text-white hover:bg-slate-800">Join</button>
-        </div>
-
-        <div class="flex items-center justify-between">
-          <div>
-            <p class="font-medium">IT Help Desk</p>
-            <p class="text-xs text-slate-500">Est. wait: 20 min</p>
-          </div>
-          <button class="rounded-lg bg-slate-900 px-3 py-2 text-sm text-white hover:bg-slate-800">Join</button>
-        </div>
+        {% empty %}
+        <p class="text-sm text-slate-500">No services available yet.</p>
+        {% endfor %}
       </div>
     </div>
 
@@ -71,17 +63,17 @@
       <p class="mt-1 text-sm text-slate-600">Latest updates.</p>
 
       <div class="mt-4 space-y-3 text-sm">
+        {% for notification in recent_notifications %}
         <div class="rounded-lg border bg-slate-50 p-3">
-          <p class="font-medium">Queue Update</p>
-          <p class="text-slate-600">You are 2 spots away from being served.</p>
-          <p class="mt-1 text-xs text-slate-500">Just now</p>
+          <p class="font-medium">{{ notification.title }}</p>
+          <p class="text-slate-600">{{ notification.message }}</p>
+          <p class="mt-1 text-xs text-slate-500">{{ notification.created_at|timesince }} ago</p>
         </div>
-
-        <div class="rounded-lg border bg-slate-50 p-3">
-          <p class="font-medium">Status Change</p>
-          <p class="text-slate-600">Your status changed to “Almost Ready”.</p>
-          <p class="mt-1 text-xs text-slate-500">5 min ago</p>
+        {% empty %}
+        <div class="rounded-lg border border-dashed p-4 text-slate-500">
+          No notifications yet.
         </div>
+        {% endfor %}
       </div>
     </div>
   </div>

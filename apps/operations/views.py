@@ -3,17 +3,17 @@ import json
 from django.contrib import messages
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
-from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import TemplateView, View
 
-from queuesmart.in_memory import NOTIFICATIONS, QUEUE_ENTRIES, QUEUE_HISTORY, next_id
-from .models import Service, Queue
+from apps.users.models import Notification
+
+from .models import Queue, QueueEntry, Service
 
 
 class OperationsView(TemplateView):
     """Operations default view; redirects to login if not authenticated."""
-    template_name = 'pages/operations_dashboard.html'
+    template_name = "pages/operations_dashboard.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -29,10 +29,7 @@ class ServiceFormView(View):
         service_id = request.GET.get("service_id") or request.POST.get("service_id")
         if not service_id:
             return None
-        try:
-            return Service.objects.get(id=service_id)
-        except Service.DoesNotExist:
-            return None
+        return Service.objects.filter(id=service_id).first()
 
     def get_context(self, request, errors=None, form_data=None):
         editing_service = self.get_service(request)
@@ -46,7 +43,9 @@ class ServiceFormView(View):
                     "description": editing_service.description,
                     "expected_duration": editing_service.expected_duration,
                     "priority": editing_service.priority,
-                } if editing_service else {}
+                }
+                if editing_service
+                else {}
             ),
         }
 
@@ -106,32 +105,36 @@ class ServiceFormView(View):
                 expected_duration=expected_duration,
                 priority=priority,
             )
+            Queue.objects.create(service=service, status="open")
             messages.success(request, "Service created successfully.")
 
         return redirect(f"{request.path}?service_id={service.id}")
 
+
 class ServiceDetailsView(TemplateView):
     """Service Details page view."""
-    template_name = 'pages/service_details.html'
+    template_name = "pages/service_details.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         service_id = self.request.GET.get("service_id")
-
         selected_service = None
+
         if service_id:
             selected_service = Service.objects.filter(id=service_id).first()
         if selected_service is None:
             selected_service = Service.objects.first()
 
-        open_entries = [
-            entry for entry in QUEUE_ENTRIES
-            if selected_service and entry["service_id"] == selected_service.id and entry["status"] == "waiting"
-        ]
-        history_entries = [
-            entry for entry in QUEUE_HISTORY
-            if selected_service and entry["service_id"] == selected_service.id
-        ]
+        open_entries = (
+            QueueEntry.objects.filter(queue__service=selected_service, status=QueueEntry.Status.WAITING)
+            if selected_service
+            else QueueEntry.objects.none()
+        )
+        history_entries = (
+            QueueEntry.objects.exclude(status=QueueEntry.Status.WAITING).filter(queue__service=selected_service)
+            if selected_service
+            else QueueEntry.objects.none()
+        )
 
         context.update(
             {
@@ -143,79 +146,73 @@ class ServiceDetailsView(TemplateView):
         )
         return context
 
+
 class ServiceTicketFulfillmentFormView(TemplateView):
     """Service Ticket Fulfillment Form view."""
-    template_name = 'pages/service_ticket_fulfillment_form.html'
+    template_name = "pages/service_ticket_fulfillment_form.html"
 
 
 def _serialize_queue_entry(entry):
     return {
-        "id": entry["id"],
-        "user": entry["user"],
-        "service": entry["service_name"],
-        "position": entry["position"],
-        "status": entry["status"],
-        "joined_at": entry["joined_at"].isoformat(),
+        "id": entry.id,
+        "user": entry.user_name,
+        "service": entry.queue.service.name,
+        "position": entry.position,
+        "status": entry.status,
+        "joined_at": entry.joined_at.isoformat(),
     }
 
 
 def _resolve_service(service_value):
     if service_value is None:
         return None
-
-    try:
-        # Try by ID
-        return Service.objects.get(id=service_value)
-    except:
-        try:
-            # Try by name
-            return Service.objects.get(name__iexact=service_value)
-        except:
-            return None
+    normalized = str(service_value).strip()
+    return Service.objects.filter(name__iexact=normalized).first() or Service.objects.filter(id=normalized).first()
 
 
-def _renumber_waiting_entries(service):
-    waiting_entries = [
-        entry for entry in QUEUE_ENTRIES
-        if entry["service_id"] == service.id and entry["status"] == "waiting"
-    ]
-    waiting_entries.sort(key=lambda entry: (entry["joined_at"], entry["id"]))
+def _get_active_queue(service):
+    queue = Queue.objects.filter(service=service, status="open").order_by("-created_at", "-id").first()
+    if queue:
+        return queue
+    return Queue.objects.create(service=service, status="open")
+
+
+def _renumber_waiting_entries(queue):
+    waiting_entries = list(
+        QueueEntry.objects.filter(queue=queue, status=QueueEntry.Status.WAITING).order_by("joined_at", "id")
+    )
     for index, entry in enumerate(waiting_entries, start=1):
-        entry["position"] = index
+        if entry.position != index:
+            entry.position = index
+            entry.save(update_fields=["position", "updated_at"])
 
 
 def _create_notification(entry, notification_type, title, message, metadata=None):
-    NOTIFICATIONS.insert(
-        0,
-        {
-            "id": next_id("notification"),
-            "recipient_name": entry["user"],
-            "service_name": entry["service_name"],
-            "notification_type": notification_type,
-            "title": title,
-            "message": message,
-            "metadata": metadata or {},
-            "is_read": False,
-            "created_at": timezone.now(),
-        },
+    Notification.objects.create(
+        queue_entry=entry,
+        recipient_name=entry.user_name,
+        service_name=entry.queue.service.name,
+        notification_type=notification_type,
+        title=title,
+        message=message,
+        metadata=metadata or {},
     )
 
 
-def _notify_close_to_served(service):
-    close_entries = [
-        entry for entry in QUEUE_ENTRIES
-        if entry["service_id"] == service.id and entry["status"] == "waiting" and entry["position"] <= 2
-    ]
-    close_entries.sort(key=lambda entry: entry["position"])
+def _notify_close_to_served(queue):
+    close_entries = QueueEntry.objects.filter(
+        queue=queue,
+        status=QueueEntry.Status.WAITING,
+        position__lte=2,
+    ).order_by("position", "id")
     for entry in close_entries:
-        already_notified = any(
-            notification["recipient_name"] == entry["user"]
-            and notification["service_name"] == entry["service_name"]
-            and notification["notification_type"] == "close_to_served"
-            and notification["metadata"].get("position") == entry["position"]
-            and not notification["is_read"]
-            for notification in NOTIFICATIONS
-        )
+        already_notified = Notification.objects.filter(
+            recipient_name=entry.user_name,
+            service_name=entry.queue.service.name,
+            notification_type="close_to_served",
+            status=Notification.Status.SENT,
+            metadata__position=entry.position,
+        ).exists()
         if already_notified:
             continue
 
@@ -223,201 +220,155 @@ def _notify_close_to_served(service):
             entry,
             "close_to_served",
             "You are close to being served",
-            f"You are now #{entry['position']} in the {entry['service_name']} queue. Please be ready.",
-            metadata={"position": entry["position"]},
+            f"You are now #{entry.position} in the {entry.queue.service.name} queue. Please be ready.",
+            metadata={"position": entry.position},
         )
 
 
 @csrf_exempt
 def join_queue(request):
-    if request.method == "POST":
-        try:
-            data = json.loads(request.body)
+    if request.method != "POST":
+        return JsonResponse({"error": "Invalid request"}, status=400)
 
-            user_name = data.get("user")
-            service = _resolve_service(data.get("service"))
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({"error": "Invalid JSON"}, status=400)
 
-            if not user_name or not service:
-                return JsonResponse({"error": "Missing required fields"}, status=400)
+    user_name = data.get("user")
+    service = _resolve_service(data.get("service"))
+    if not user_name or not service:
+        return JsonResponse({"error": "Missing required fields"}, status=400)
 
-            position = sum(
-                1 for entry in QUEUE_ENTRIES
-                if entry["service_id"] == service.id and entry["status"] == "waiting"
-            ) + 1
-            entry = {
-                "id": next_id("queue"),
-                "user": user_name,
-                "service_id": service.id,
-                "service_name": service.name,
-                "position": position,
-                "status": "waiting",
-                "joined_at": timezone.now(),
-            }
-            QUEUE_ENTRIES.append(entry)
-            
-            Queue.objects.create(
-                service=service,
-                status="open"
-            )
+    queue = _get_active_queue(service)
+    if QueueEntry.objects.filter(queue=queue, user_name=user_name, status=QueueEntry.Status.WAITING).exists():
+        return JsonResponse({"error": "User is already in this queue"}, status=400)
 
-            _create_notification(
-                entry,
-                "queue_joined",
-                "Queue joined successfully",
-                f"You joined the {service.name} queue at position #{entry['position']}.",
-                metadata={"position": entry["position"]},
-            )
-            _notify_close_to_served(service)
+    position = QueueEntry.objects.filter(queue=queue, status=QueueEntry.Status.WAITING).count() + 1
+    entry = QueueEntry.objects.create(queue=queue, user_name=user_name, position=position)
 
-            return JsonResponse({
-                "message": "Joined queue successfully",
-                "data": _serialize_queue_entry(entry)
-            }, status=200)
+    _create_notification(
+        entry,
+        "queue_joined",
+        "Queue joined successfully",
+        f"You joined the {service.name} queue at position #{entry.position}.",
+        metadata={"position": entry.position},
+    )
+    _notify_close_to_served(queue)
 
-        except json.JSONDecodeError:
-            return JsonResponse({"error": "Invalid JSON"}, status=400)
-
-    return JsonResponse({"error": "Invalid request"}, status=400)
+    return JsonResponse({"message": "Joined queue successfully", "data": _serialize_queue_entry(entry)}, status=200)
 
 
 @csrf_exempt
 def leave_queue(request):
-    if request.method == "POST":
-        try:
-            data = json.loads(request.body)
-            user_name = data.get("user")
-            service = _resolve_service(data.get("service")) if data.get("service") else None
+    if request.method != "POST":
+        return JsonResponse({"error": "Invalid request"}, status=400)
 
-            if not user_name:
-                return JsonResponse({"error": "Missing required field: user"}, status=400)
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({"error": "Invalid JSON"}, status=400)
 
-            entry = next(
-                (
-                    queue_entry for queue_entry in QUEUE_ENTRIES
-                    if queue_entry["user"] == user_name
-                    and queue_entry["status"] == "waiting"
-                    and (service is None or queue_entry["service_id"] == service.id)
-                ),
-                None,
-            )
-            if not entry:
-                return JsonResponse({"error": "User not found in queue"}, status=404)
+    user_name = data.get("user")
+    service = _resolve_service(data.get("service")) if data.get("service") else None
+    if not user_name:
+        return JsonResponse({"error": "Missing required field: user"}, status=400)
 
-            QUEUE_ENTRIES.remove(entry)
-            entry["status"] = "left"
-            QUEUE_HISTORY.insert(0, entry)
-            service_for_entry = _resolve_service(entry["service_id"])
-            _renumber_waiting_entries(service_for_entry)
-            _notify_close_to_served(service_for_entry)
+    entries = QueueEntry.objects.filter(user_name=user_name, status=QueueEntry.Status.WAITING)
+    if service:
+        entries = entries.filter(queue__service=service)
+    entry = entries.order_by("joined_at", "id").first()
+    if not entry:
+        return JsonResponse({"error": "User not found in queue"}, status=404)
 
-            return JsonResponse({
-                "message": "Left queue successfully",
-                "user": user_name
-            }, status=200)
+    entry.status = QueueEntry.Status.CANCELED
+    entry.save(update_fields=["status", "updated_at"])
+    _renumber_waiting_entries(entry.queue)
+    _notify_close_to_served(entry.queue)
 
-        except json.JSONDecodeError:
-            return JsonResponse({"error": "Invalid JSON"}, status=400)
-
-    return JsonResponse({"error": "Invalid request"}, status=400)
+    return JsonResponse({"message": "Left queue successfully", "user": user_name}, status=200)
 
 
 def view_queue(request):
-    if request.method == "GET":
-        service = _resolve_service(request.GET.get("service")) if request.GET.get("service") else None
+    if request.method != "GET":
+        return JsonResponse({"error": "Invalid request"}, status=400)
 
-        db_entries = Queue.objects.filter(status="open")
-
-        queue_entries = [
-            {
-                "user": entry.user if hasattr(entry, "user") else "Unknown",
-                "service": entry.service.name,
-                "position": i + 1
-            }
-            for i, entry in enumerate(db_entries)
-        ]
-
-        if service:
-            queue_entries = [entry for entry in queue_entries if entry["service"] == service.name]
-        return JsonResponse({
-            "queue": queue_entries,
-            "total_users": len(queue_entries)
-        }, status=200)
-
-    return JsonResponse({"error": "Invalid request"}, status=400)
+    service = _resolve_service(request.GET.get("service")) if request.GET.get("service") else None
+    queue_entries = QueueEntry.objects.filter(status=QueueEntry.Status.WAITING).select_related("queue__service")
+    if service:
+        queue_entries = queue_entries.filter(queue__service=service)
+    return JsonResponse(
+        {"queue": [_serialize_queue_entry(entry) for entry in queue_entries], "total_users": queue_entries.count()},
+        status=200,
+    )
 
 
 @csrf_exempt
 def serve_next(request):
-    if request.method == "POST":
-        service_value = None
-        if request.body:
-            try:
-                data = json.loads(request.body)
-                service_value = data.get("service")
-            except json.JSONDecodeError:
-                return JsonResponse({"error": "Invalid JSON"}, status=400)
+    if request.method != "POST":
+        return JsonResponse({"error": "Invalid request"}, status=400)
 
-        service = _resolve_service(service_value) if service_value else None
-        waiting_entries = [entry for entry in QUEUE_ENTRIES if entry["status"] == "waiting"]
-        if service:
-            waiting_entries = [entry for entry in waiting_entries if entry["service_id"] == service.id]
-        waiting_entries.sort(key=lambda entry: (entry["service_id"], entry["position"], entry["id"]))
-        next_user = waiting_entries[0] if waiting_entries else None
+    service_value = None
+    if request.body:
+        try:
+            data = json.loads(request.body)
+            service_value = data.get("service")
+        except json.JSONDecodeError:
+            return JsonResponse({"error": "Invalid JSON"}, status=400)
 
-        if not next_user:
-            return JsonResponse({"error": "Queue is empty"}, status=400)
+    service = _resolve_service(service_value) if service_value else None
+    waiting_entries = QueueEntry.objects.filter(status=QueueEntry.Status.WAITING).select_related("queue__service")
+    if service:
+        waiting_entries = waiting_entries.filter(queue__service=service)
+    next_user = waiting_entries.order_by("queue__service__name", "position", "id").first()
+    if not next_user:
+        return JsonResponse({"error": "Queue is empty"}, status=400)
 
-        QUEUE_ENTRIES.remove(next_user)
-        next_user["status"] = "served"
-        QUEUE_HISTORY.insert(0, next_user)
-        service_for_entry = _resolve_service(next_user["service_id"])
-        _renumber_waiting_entries(service_for_entry)
-        _notify_close_to_served(service_for_entry)
-        remaining_queue = [
-            entry for entry in QUEUE_ENTRIES
-            if entry["service_id"] == next_user["service_id"] and entry["status"] == "waiting"
-        ]
+    next_user.status = QueueEntry.Status.SERVED
+    next_user.save(update_fields=["status", "updated_at"])
+    _renumber_waiting_entries(next_user.queue)
+    _notify_close_to_served(next_user.queue)
+    remaining_queue = QueueEntry.objects.filter(
+        queue=next_user.queue,
+        status=QueueEntry.Status.WAITING,
+    ).select_related("queue__service")
 
-        return JsonResponse({
+    return JsonResponse(
+        {
             "message": "Served next user successfully",
             "served_user": _serialize_queue_entry(next_user),
-            "remaining_queue": [_serialize_queue_entry(entry) for entry in remaining_queue]
-        }, status=200)
-
-    return JsonResponse({"error": "Invalid request"}, status=400)
+            "remaining_queue": [_serialize_queue_entry(entry) for entry in remaining_queue],
+        },
+        status=200,
+    )
 
 
 def estimate_wait_time(request):
-    if request.method == "GET":
-        user_name = request.GET.get("user")
-        service = _resolve_service(request.GET.get("service")) if request.GET.get("service") else None
+    if request.method != "GET":
+        return JsonResponse({"error": "Invalid request"}, status=400)
 
-        if not user_name:
-            return JsonResponse({"error": "Missing required field: user"}, status=400)
+    user_name = request.GET.get("user")
+    service = _resolve_service(request.GET.get("service")) if request.GET.get("service") else None
+    if not user_name:
+        return JsonResponse({"error": "Missing required field: user"}, status=400)
 
-        entry = next(
-            (
-                queue_entry for queue_entry in QUEUE_ENTRIES
-                if queue_entry["user"] == user_name
-                and queue_entry["status"] == "waiting"
-                and (service is None or queue_entry["service_id"] == service.id)
-            ),
-            None,
-        )
-        if not entry:
-            return JsonResponse({"error": "User not found in queue"}, status=404)
+    entries = QueueEntry.objects.filter(user_name=user_name, status=QueueEntry.Status.WAITING).select_related(
+        "queue__service"
+    )
+    if service:
+        entries = entries.filter(queue__service=service)
+    entry = entries.order_by("joined_at", "id").first()
+    if not entry:
+        return JsonResponse({"error": "User not found in queue"}, status=404)
 
-        service_for_entry = _resolve_service(entry["service_id"])
-        estimated_wait = (entry["position"] - 1) * service_for_entry.expected_duration
-        
-        return JsonResponse({
+    estimated_wait = (entry.position - 1) * entry.queue.service.expected_duration
+    return JsonResponse(
+        {
             "user": user_name,
-            "position": entry["position"],
-            "service": service_for_entry.name,
+            "position": entry.position,
+            "service": entry.queue.service.name,
             "estimated_wait_time": estimated_wait,
-            "unit": "minutes"
-        }, status=200)
-
-    return JsonResponse({"error": "Invalid request"}, status=400)
-
-# last updated: 2026-04-10 2:29 PM
+            "unit": "minutes",
+        },
+        status=200,
+    )

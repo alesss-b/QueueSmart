@@ -4,7 +4,7 @@
 {% block body %}
 <div class="w-full max-w-5xl px-6 py-10">
   <h1 class="text-3xl font-semibold mb-2">History</h1>
-  <p class="text-slate-600 mb-8">Past queues you joined (mock data).</p>
+  <p class="text-slate-600 mb-8">Past queues you joined and their final outcomes.</p>
 
   <div class="rounded-2xl border bg-white shadow-sm overflow-hidden">
     <div class="p-6 border-b">
@@ -24,21 +24,23 @@
           </tr>
         </thead>
         <tbody class="divide-y">
+          {% for entry in history_entries %}
           <tr>
-            <td class="px-6 py-4">Feb 18, 2026</td>
-            <td class="px-6 py-4">Academic Advising</td>
-            <td class="px-6 py-4"><span class="rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-700">Served</span></td>
+            <td class="px-6 py-4">{{ entry.updated_at|date:"M j, Y" }}</td>
+            <td class="px-6 py-4">{{ entry.queue.service.name }}</td>
+            <td class="px-6 py-4">
+              {% if entry.status == "served" %}
+              <span class="rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-700">Served</span>
+              {% else %}
+              <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">Left Queue</span>
+              {% endif %}
+            </td>
           </tr>
+          {% empty %}
           <tr>
-            <td class="px-6 py-4">Feb 10, 2026</td>
-            <td class="px-6 py-4">IT Help Desk</td>
-            <td class="px-6 py-4"><span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">Left Queue</span></td>
+            <td colspan="3" class="px-6 py-8 text-center text-slate-500">No queue history yet.</td>
           </tr>
-          <tr>
-            <td class="px-6 py-4">Jan 30, 2026</td>
-            <td class="px-6 py-4">Financial Aid Office</td>
-            <td class="px-6 py-4"><span class="rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-700">Served</span></td>
-          </tr>
+          {% endfor %}
         </tbody>
       </table>
     </div>
