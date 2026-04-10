@@ -2,6 +2,7 @@ from django.test import Client, TestCase
 from django.utils import timezone
 from django.contrib.auth.models import User, Group
 from apps.users.models import UserProfile
+from django.urls import reverse, resolve
 from queuesmart.in_memory import NOTIFICATIONS, reset_state
 
 
@@ -24,8 +25,7 @@ class NotificationPageTests(TestCase):
                 "created_at": timezone.now(),
             }
         )
-
-        response = self.client.get("/users/templates/pages/notifications/")
+        response = self.client.get('/users/notifications')
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Queue joined successfully")
 
