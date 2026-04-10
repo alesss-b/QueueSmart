@@ -324,11 +324,22 @@ def leave_queue(request):
 def view_queue(request):
     if request.method == "GET":
         service = _resolve_service(request.GET.get("service")) if request.GET.get("service") else None
-        queue_entries = [entry for entry in QUEUE_ENTRIES if entry["status"] == "waiting"]
+
+        db_entries = Queue.objects.filter(status="open")
+
+        queue_entries = [
+            {
+                "user": entry.user if hasattr(entry, "user") else "Unknown",
+                "service": entry.service.name,
+                "position": i + 1
+            }
+            for i, entry in enumerate(db_entries)
+        ]
+
         if service:
-            queue_entries = [entry for entry in queue_entries if entry["service_id"] == service.id]
+            queue_entries = [entry for entry in queue_entries if entry["service"] == service.name]
         return JsonResponse({
-            "queue": [_serialize_queue_entry(entry) for entry in queue_entries],
+            "queue": queue_entries,
             "total_users": len(queue_entries)
         }, status=200)
 
@@ -409,4 +420,4 @@ def estimate_wait_time(request):
 
     return JsonResponse({"error": "Invalid request"}, status=400)
 
-# last updated: 2026-04-10 2:09 PM
+# last updated: 2026-04-10 2:29 PM
