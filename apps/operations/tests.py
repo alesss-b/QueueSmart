@@ -2,13 +2,32 @@ import json
 
 from django.test import Client, TestCase
 
-from queuesmart.in_memory import NOTIFICATIONS, QUEUE_ENTRIES, QUEUE_HISTORY, SERVICES, reset_state
+from apps.operations.models import Service
+from queuesmart.in_memory import NOTIFICATIONS, QUEUE_ENTRIES, QUEUE_HISTORY
 
 
 class QueueManagementTests(TestCase):
     def setUp(self):
         self.client = Client()
-        reset_state()
+
+        # clear in-memory state still used by queue/notifications/history
+        QUEUE_ENTRIES.clear()
+        QUEUE_HISTORY.clear()
+        NOTIFICATIONS.clear()
+
+        # create real database-backed services
+        self.advising = Service.objects.create(
+            name="Academic Advising",
+            description="Help with course planning.",
+            expected_duration=15,
+            priority=1,
+        )
+        self.it_help = Service.objects.create(
+            name="IT Help Desk",
+            description="Technical support.",
+            expected_duration=20,
+            priority=2,
+        )
 
     def test_join_queue_success(self):
         response = self.client.post(
@@ -101,9 +120,6 @@ class QueueManagementTests(TestCase):
         )
 
     def test_estimate_wait_time_uses_service_duration(self):
-        service = next(service for service in SERVICES if service["name"] == "IT Help Desk")
-        service["expected_duration"] = 20
-
         self.client.post(
             "/operations/queue/join",
             data=json.dumps({"user": "Cordai", "service": "IT Help Desk"}),
@@ -123,7 +139,6 @@ class QueueManagementTests(TestCase):
 class ServiceManagementTests(TestCase):
     def setUp(self):
         self.client = Client()
-        reset_state()
 
     def test_create_service(self):
         response = self.client.post(
@@ -132,26 +147,37 @@ class ServiceManagementTests(TestCase):
                 "name": "Registrar",
                 "description": "Transcript requests and enrollment verification.",
                 "expected_duration": 12,
-                "priority": "medium",
+                "priority": 2,
             },
         )
 
         self.assertEqual(response.status_code, 302)
-        self.assertTrue(any(service["name"] == "Registrar" for service in SERVICES))
+        self.assertTrue(Service.objects.filter(name="Registrar").exists())
 
     def test_update_service(self):
-        existing_service = SERVICES[0]
+        existing_service = Service.objects.create(
+            name="Financial Aid",
+            description="Original description",
+            expected_duration=10,
+            priority=1,
+        )
+
         response = self.client.post(
             "/operations/service/edit",
             data={
-                "service_id": existing_service["id"],
-                "name": existing_service["name"],
+                "service_id": existing_service.id,
+                "name": existing_service.name,
                 "description": "Updated description",
                 "expected_duration": 18,
-                "priority": "high",
+                "priority": 3,
             },
         )
 
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(existing_service["description"], "Updated description")
-        self.assertEqual(existing_service["expected_duration"], 18)
+
+        existing_service.refresh_from_db()
+        self.assertEqual(existing_service.description, "Updated description")
+        self.assertEqual(existing_service.expected_duration, 18)
+        self.assertEqual(existing_service.priority, 3)
+        
+# last updated: 2026-04-10 1:59 PM

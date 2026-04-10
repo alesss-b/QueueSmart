@@ -7,7 +7,8 @@ from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import TemplateView, View
 
-from queuesmart.in_memory import NOTIFICATIONS, QUEUE_ENTRIES, QUEUE_HISTORY, SERVICES, next_id
+from queuesmart.in_memory import NOTIFICATIONS, QUEUE_ENTRIES, QUEUE_HISTORY, next_id
+from .models import Service, Queue
 
 
 class OperationsView(TemplateView):
@@ -16,7 +17,7 @@ class OperationsView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["services"] = SERVICES
+        context["services"] = Service.objects.all()
         return context
 
 
@@ -28,18 +29,25 @@ class ServiceFormView(View):
         service_id = request.GET.get("service_id") or request.POST.get("service_id")
         if not service_id:
             return None
-        for service in SERVICES:
-            if str(service["id"]) == str(service_id):
-                return service
-        return None
+        try:
+            return Service.objects.get(id=service_id)
+        except Service.DoesNotExist:
+            return None
 
     def get_context(self, request, errors=None, form_data=None):
         editing_service = self.get_service(request)
         return {
             "editing_service": editing_service,
-            "services": SERVICES,
+            "services": Service.objects.all(),
             "errors": errors or {},
-            "form_data": form_data or editing_service or {},
+            "form_data": form_data or (
+                {
+                    "name": editing_service.name,
+                    "description": editing_service.description,
+                    "expected_duration": editing_service.expected_duration,
+                    "priority": editing_service.priority,
+                } if editing_service else {}
+            ),
         }
 
     def get(self, request, *args, **kwargs):
@@ -59,8 +67,7 @@ class ServiceFormView(View):
             errors["name"] = "Service name is required."
         if not form_data["description"]:
             errors["description"] = "Description is required."
-        if form_data["priority"] not in {"low", "medium", "high"}:
-            errors["priority"] = "Priority must be low, medium, or high."
+
         try:
             expected_duration = int(form_data["expected_duration"])
             if expected_duration <= 0:
@@ -69,37 +76,39 @@ class ServiceFormView(View):
             errors["expected_duration"] = "Expected duration must be a positive number."
             expected_duration = None
 
-        duplicate = next(
-            (
-                service
-                for service in SERVICES
-                if service["name"].lower() == form_data["name"].lower()
-                and (not editing_service or service["id"] != editing_service["id"])
-            ),
-            None,
-        )
-        if duplicate:
+        try:
+            priority = int(form_data["priority"])
+        except (TypeError, ValueError):
+            errors["priority"] = "Priority must be a number."
+            priority = None
+
+        duplicate = Service.objects.filter(name__iexact=form_data["name"])
+        if editing_service:
+            duplicate = duplicate.exclude(id=editing_service.id)
+        if duplicate.exists():
             errors["name"] = "A service with that name already exists."
 
         if errors:
             return render(request, self.template_name, self.get_context(request, errors=errors, form_data=form_data))
 
-        payload = {
-            "name": form_data["name"],
-            "description": form_data["description"],
-            "expected_duration": expected_duration,
-            "priority": form_data["priority"],
-        }
         if editing_service:
-            editing_service.update(payload)
+            editing_service.name = form_data["name"]
+            editing_service.description = form_data["description"]
+            editing_service.expected_duration = expected_duration
+            editing_service.priority = priority
+            editing_service.save()
             service = editing_service
             messages.success(request, "Service updated successfully.")
         else:
-            service = {"id": next_id("service"), **payload}
-            SERVICES.append(service)
+            service = Service.objects.create(
+                name=form_data["name"],
+                description=form_data["description"],
+                expected_duration=expected_duration,
+                priority=priority,
+            )
             messages.success(request, "Service created successfully.")
 
-        return redirect(f"{request.path}?service_id={service['id']}")
+        return redirect(f"{request.path}?service_id={service.id}")
 
 class ServiceDetailsView(TemplateView):
     """Service Details page view."""
@@ -108,22 +117,25 @@ class ServiceDetailsView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         service_id = self.request.GET.get("service_id")
+
         selected_service = None
         if service_id:
-            selected_service = next((service for service in SERVICES if str(service["id"]) == str(service_id)), None)
-        if selected_service is None and SERVICES:
-            selected_service = SERVICES[0]
+            selected_service = Service.objects.filter(id=service_id).first()
+        if selected_service is None:
+            selected_service = Service.objects.first()
+
         open_entries = [
             entry for entry in QUEUE_ENTRIES
-            if selected_service and entry["service_id"] == selected_service["id"] and entry["status"] == "waiting"
+            if selected_service and entry["service_id"] == selected_service.id and entry["status"] == "waiting"
         ]
         history_entries = [
             entry for entry in QUEUE_HISTORY
-            if selected_service and entry["service_id"] == selected_service["id"]
+            if selected_service and entry["service_id"] == selected_service.id
         ]
+
         context.update(
             {
-                "services": SERVICES,
+                "services": Service.objects.all(),
                 "selected_service": selected_service,
                 "open_entries": open_entries,
                 "history_entries": history_entries[:10],
@@ -150,16 +162,22 @@ def _serialize_queue_entry(entry):
 def _resolve_service(service_value):
     if service_value is None:
         return None
-    for service in SERVICES:
-        if str(service["id"]) == str(service_value) or service["name"].lower() == str(service_value).strip().lower():
-            return service
-    return None
+
+    try:
+        # Try by ID
+        return Service.objects.get(id=service_value)
+    except:
+        try:
+            # Try by name
+            return Service.objects.get(name__iexact=service_value)
+        except:
+            return None
 
 
 def _renumber_waiting_entries(service):
     waiting_entries = [
         entry for entry in QUEUE_ENTRIES
-        if entry["service_id"] == service["id"] and entry["status"] == "waiting"
+        if entry["service_id"] == service.id and entry["status"] == "waiting"
     ]
     waiting_entries.sort(key=lambda entry: (entry["joined_at"], entry["id"]))
     for index, entry in enumerate(waiting_entries, start=1):
@@ -186,7 +204,7 @@ def _create_notification(entry, notification_type, title, message, metadata=None
 def _notify_close_to_served(service):
     close_entries = [
         entry for entry in QUEUE_ENTRIES
-        if entry["service_id"] == service["id"] and entry["status"] == "waiting" and entry["position"] <= 2
+        if entry["service_id"] == service.id and entry["status"] == "waiting" and entry["position"] <= 2
     ]
     close_entries.sort(key=lambda entry: entry["position"])
     for entry in close_entries:
@@ -224,24 +242,29 @@ def join_queue(request):
 
             position = sum(
                 1 for entry in QUEUE_ENTRIES
-                if entry["service_id"] == service["id"] and entry["status"] == "waiting"
+                if entry["service_id"] == service.id and entry["status"] == "waiting"
             ) + 1
             entry = {
                 "id": next_id("queue"),
                 "user": user_name,
-                "service_id": service["id"],
-                "service_name": service["name"],
+                "service_id": service.id,
+                "service_name": service.name,
                 "position": position,
                 "status": "waiting",
                 "joined_at": timezone.now(),
             }
             QUEUE_ENTRIES.append(entry)
+            
+            Queue.objects.create(
+                service=service,
+                status="open"
+            )
 
             _create_notification(
                 entry,
                 "queue_joined",
                 "Queue joined successfully",
-                f"You joined the {service['name']} queue at position #{entry['position']}.",
+                f"You joined the {service.name} queue at position #{entry['position']}.",
                 metadata={"position": entry["position"]},
             )
             _notify_close_to_served(service)
@@ -273,7 +296,7 @@ def leave_queue(request):
                     queue_entry for queue_entry in QUEUE_ENTRIES
                     if queue_entry["user"] == user_name
                     and queue_entry["status"] == "waiting"
-                    and (service is None or queue_entry["service_id"] == service["id"])
+                    and (service is None or queue_entry["service_id"] == service.id)
                 ),
                 None,
             )
@@ -303,7 +326,7 @@ def view_queue(request):
         service = _resolve_service(request.GET.get("service")) if request.GET.get("service") else None
         queue_entries = [entry for entry in QUEUE_ENTRIES if entry["status"] == "waiting"]
         if service:
-            queue_entries = [entry for entry in queue_entries if entry["service_id"] == service["id"]]
+            queue_entries = [entry for entry in queue_entries if entry["service_id"] == service.id]
         return JsonResponse({
             "queue": [_serialize_queue_entry(entry) for entry in queue_entries],
             "total_users": len(queue_entries)
@@ -326,7 +349,7 @@ def serve_next(request):
         service = _resolve_service(service_value) if service_value else None
         waiting_entries = [entry for entry in QUEUE_ENTRIES if entry["status"] == "waiting"]
         if service:
-            waiting_entries = [entry for entry in waiting_entries if entry["service_id"] == service["id"]]
+            waiting_entries = [entry for entry in waiting_entries if entry["service_id"] == service.id]
         waiting_entries.sort(key=lambda entry: (entry["service_id"], entry["position"], entry["id"]))
         next_user = waiting_entries[0] if waiting_entries else None
 
@@ -366,7 +389,7 @@ def estimate_wait_time(request):
                 queue_entry for queue_entry in QUEUE_ENTRIES
                 if queue_entry["user"] == user_name
                 and queue_entry["status"] == "waiting"
-                and (service is None or queue_entry["service_id"] == service["id"])
+                and (service is None or queue_entry["service_id"] == service.id)
             ),
             None,
         )
@@ -374,14 +397,16 @@ def estimate_wait_time(request):
             return JsonResponse({"error": "User not found in queue"}, status=404)
 
         service_for_entry = _resolve_service(entry["service_id"])
-        estimated_wait = (entry["position"] - 1) * service_for_entry["expected_duration"]
-
+        estimated_wait = (entry["position"] - 1) * service_for_entry.expected_duration
+        
         return JsonResponse({
             "user": user_name,
             "position": entry["position"],
-            "service": service_for_entry["name"],
+            "service": service_for_entry.name,
             "estimated_wait_time": estimated_wait,
             "unit": "minutes"
         }, status=200)
 
     return JsonResponse({"error": "Invalid request"}, status=400)
+
+# last updated: 2026-04-10 2:09 PM
