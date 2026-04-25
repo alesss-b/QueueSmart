@@ -13,4 +13,6 @@ urlpatterns = [
     path('queue/view', views.view_queue, name='view_queue'),
     path('queue/serve-next', views.serve_next, name='serve_next'),
     path('queue/wait-time', views.estimate_wait_time, name='estimate_wait_time'),
+    path("reports", views.ReportsView.as_view(), name="reports"),
+    path("reports/export-csv", views.export_queue_report_csv, name="export_queue_report_csv"),
 ]

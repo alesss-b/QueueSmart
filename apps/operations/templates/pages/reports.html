@@ -1,0 +1,107 @@
+{% extends 'components/operations_root.html' %}
+{% block page_title %}Reports{% endblock %}
+
+{% block body %}
+<div class="flex flex-col p-4 gap-4 max-w-full">
+
+    <div class="relative bg-neutral-primary-soft border border-default rounded-base shadow-xs p-5">
+        <h5 class="text-2xl font-semibold tracking-tight text-heading leading-8 mb-4">Queue Reports</h5>
+
+        <form method="get" class="flex flex-col md:flex-row gap-3 mb-4">
+            <select name="service_id" class="border border-default rounded-base px-3 py-2 text-sm">
+                <option value="">All Services</option>
+                {% for service in services %}
+                <option value="{{ service.id }}">
+                    {{ service.name }}
+                </option>
+                {% endfor %}
+            </select>
+
+            <button type="submit" class="inline-flex items-center text-white bg-brand hover:bg-brand-strong box-border border border-transparent shadow-xs font-medium leading-5 rounded-base text-xs px-3 py-2">
+                Filter
+            </button>
+
+            <a href="{% url 'export_queue_report_csv' %}{% if selected_service %}?service_id={{ selected_service.id }}{% endif %}"
+               class="inline-flex items-center text-white bg-success hover:bg-success-strong box-border border border-transparent shadow-xs font-medium leading-5 rounded-base text-xs px-3 py-2">
+                Export CSV
+            </a>
+        </form>
+
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-3">
+            <div class="border border-default rounded-base p-3">
+                <div class="text-sm text-body">Total Entries</div>
+                <div class="text-xl font-semibold">{{ total_entries }}</div>
+            </div>
+
+            <div class="border border-default rounded-base p-3">
+                <div class="text-sm text-body">Waiting</div>
+                <div class="text-xl font-semibold">{{ waiting_count }}</div>
+            </div>
+
+            <div class="border border-default rounded-base p-3">
+                <div class="text-sm text-body">Served</div>
+                <div class="text-xl font-semibold">{{ served_count }}</div>
+            </div>
+
+            <div class="border border-default rounded-base p-3">
+                <div class="text-sm text-body">Canceled</div>
+                <div class="text-xl font-semibold">{{ canceled_count }}</div>
+            </div>
+
+            <div class="border border-default rounded-base p-3">
+                <div class="text-sm text-body">Avg Est. Wait</div>
+                <div class="text-xl font-semibold">{{ average_estimated_wait }} min</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="relative overflow-x-scroll bg-neutral-primary-soft shadow-xs rounded-base border border-default">
+        <div class="p-5 text-lg font-semibold">Queue Activity</div>
+
+        <table class="w-full text-sm text-left rtl:text-right text-body">
+            <thead class="text-sm text-body bg-neutral-secondary-medium border-b border-default-medium">
+                <tr>
+                    <th scope="col" class="px-6 py-3 font-medium">User</th>
+                    <th scope="col" class="px-6 py-3 font-medium">Service</th>
+                    <th scope="col" class="px-6 py-3 font-medium">Status</th>
+                    <th scope="col" class="px-6 py-3 font-medium">Position</th>
+                    <th scope="col" class="px-6 py-3 font-medium">Joined At</th>
+                    <th scope="col" class="px-6 py-3 font-medium">Updated At</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for entry in entries %}
+                <tr class="bg-neutral-primary-soft border-b border-default">
+                    <td class="px-6 py-4 font-medium text-heading whitespace-nowrap">
+                        {{ entry.user_name }}
+                    </td>
+                    <td class="px-6 py-4">
+                        {{ entry.queue.service.name }}
+                    </td>
+                    <td class="px-6 py-4">
+                        {{ entry.status }}
+                    </td>
+                    <td class="px-6 py-4">
+                        {{ entry.position }}
+                    </td>
+                    <td class="px-6 py-4">
+                        {{ entry.joined_at }}
+                    </td>
+                    <td class="px-6 py-4">
+                        {{ entry.updated_at }}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr class="bg-neutral-primary-soft border-b border-default">
+                    <td class="px-6 py-4" colspan="6">
+                        No queue activity found.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+</div>
+{% endblock %}

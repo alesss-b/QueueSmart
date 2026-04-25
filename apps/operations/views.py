@@ -1,7 +1,7 @@
 import json
-
+import csv
 from django.contrib import messages
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.shortcuts import redirect, render
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import TemplateView, View
@@ -224,6 +224,10 @@ def _notify_close_to_served(queue):
             metadata={"position": entry.position},
         )
 
+def _user_can_access_reports(user):
+    if not user.is_authenticated:
+        return False
+    return user.is_staff or user.groups.filter(name="Staff").exists()
 
 @csrf_exempt
 def join_queue(request):
@@ -372,3 +376,99 @@ def estimate_wait_time(request):
         },
         status=200,
     )
+class ReportsView(TemplateView):
+    """Queue reporting dashboard view."""
+    template_name = "pages/reports.html"
+
+    def dispatch(self, request, *args, **kwargs):
+        if not _user_can_access_reports(request.user):
+            return redirect("login")
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        service_id = self.request.GET.get("service_id")
+        selected_service = None
+
+        entries = QueueEntry.objects.select_related("queue__service").order_by("-joined_at", "-id")
+        if service_id:
+            selected_service = Service.objects.filter(id=service_id).first()
+            if selected_service:
+                entries = entries.filter(queue__service=selected_service)
+
+        total_entries = entries.count()
+        waiting_count = entries.filter(status=QueueEntry.Status.WAITING).count()
+        served_count = entries.filter(status=QueueEntry.Status.SERVED).count()
+        canceled_count = entries.filter(status=QueueEntry.Status.CANCELED).count()
+
+        estimated_wait_values = []
+        for entry in entries.filter(status=QueueEntry.Status.WAITING):
+            estimated_wait_values.append((entry.position - 1) * entry.queue.service.expected_duration)
+
+        average_estimated_wait = 0
+        if estimated_wait_values:
+            average_estimated_wait = round(sum(estimated_wait_values) / len(estimated_wait_values), 2)
+
+        context.update(
+            {
+                "services": Service.objects.all(),
+                "selected_service": selected_service,
+                "entries": entries[:25],
+                "total_entries": total_entries,
+                "waiting_count": waiting_count,
+                "served_count": served_count,
+                "canceled_count": canceled_count,
+                "average_estimated_wait": average_estimated_wait,
+            }
+        )
+        return context
+def export_queue_report_csv(request):
+    if not _user_can_access_reports(request.user):
+        return redirect("login")
+
+    service_id = request.GET.get("service_id")
+    selected_service = None
+
+    entries = QueueEntry.objects.select_related("queue__service").order_by("-joined_at", "-id")
+    if service_id:
+        selected_service = Service.objects.filter(id=service_id).first()
+        if selected_service:
+            entries = entries.filter(queue__service=selected_service)
+
+    response = HttpResponse(content_type="text/csv")
+    response["Content-Disposition"] = 'attachment; filename="queue_activity_report.csv"'
+
+    writer = csv.writer(response)
+    writer.writerow(
+        [
+            "User",
+            "Service",
+            "Queue Status",
+            "Position",
+            "Expected Duration",
+            "Estimated Wait",
+            "Joined At",
+            "Updated At",
+        ]
+    )
+
+    for entry in entries:
+        estimated_wait = ""
+        if entry.status == QueueEntry.Status.WAITING:
+            estimated_wait = (entry.position - 1) * entry.queue.service.expected_duration
+
+        writer.writerow(
+            [
+                entry.user_name,
+                entry.queue.service.name,
+                entry.status,
+                entry.position,
+                entry.queue.service.expected_duration,
+                estimated_wait,
+                entry.joined_at,
+                entry.updated_at,
+            ]
+        )
+
+    return response

@@ -1,7 +1,7 @@
 import json
 
 from django.test import Client, TestCase
-
+from django.contrib.auth.models import Group, User
 from apps.operations.models import Queue, QueueEntry, Service
 from apps.users.models import Notification
 
@@ -173,3 +173,94 @@ class ServiceManagementTests(TestCase):
         self.assertEqual(existing_service.description, "Updated description")
         self.assertEqual(existing_service.expected_duration, 18)
         self.assertEqual(existing_service.priority, 3)
+class ReportingTests(TestCase):
+    def setUp(self):
+        self.client = Client()
+
+        self.staff_group = Group.objects.create(name="Staff")
+        self.staff_user = User.objects.create_user(
+            username="staffuser",
+            password="testpass123",
+        )
+        self.staff_user.groups.add(self.staff_group)
+
+        self.customer_user = User.objects.create_user(
+            username="customeruser",
+            password="testpass123",
+        )
+
+        self.service = Service.objects.create(
+            name="Academic Advising",
+            description="Help with course planning.",
+            expected_duration=15,
+            priority=1,
+        )
+        self.queue = Queue.objects.create(
+            service=self.service,
+            status="open",
+        )
+        self.entry = QueueEntry.objects.create(
+            queue=self.queue,
+            user_name="Cordai",
+            position=1,
+            status=QueueEntry.Status.WAITING,
+        )
+
+    def test_staff_can_view_reports_page(self):
+        self.client.login(username="staffuser", password="testpass123")
+
+        response = self.client.get("/operations/reports")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Queue Reports")
+        self.assertContains(response, "Cordai")
+        self.assertContains(response, "Academic Advising")
+
+    def test_customer_cannot_view_reports_page(self):
+        self.client.login(username="customeruser", password="testpass123")
+
+        response = self.client.get("/operations/reports")
+
+        self.assertEqual(response.status_code, 302)
+
+    def test_staff_can_export_queue_report_csv(self):
+        self.client.login(username="staffuser", password="testpass123")
+
+        response = self.client.get("/operations/reports/export-csv")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response["Content-Type"], "text/csv")
+        self.assertIn("queue_activity_report.csv", response["Content-Disposition"])
+
+        csv_content = response.content.decode()
+        self.assertIn("User,Service,Queue Status,Position", csv_content)
+        self.assertIn("Cordai", csv_content)
+        self.assertIn("Academic Advising", csv_content)
+
+    def test_csv_report_can_filter_by_service(self):
+        self.client.login(username="staffuser", password="testpass123")
+
+        other_service = Service.objects.create(
+            name="IT Help Desk",
+            description="Technical support.",
+            expected_duration=20,
+            priority=2,
+        )
+        other_queue = Queue.objects.create(
+            service=other_service,
+            status="open",
+        )
+        QueueEntry.objects.create(
+            queue=other_queue,
+            user_name="Amara",
+            position=1,
+            status=QueueEntry.Status.WAITING,
+        )
+
+        response = self.client.get(f"/operations/reports/export-csv?service_id={self.service.id}")
+
+        csv_content = response.content.decode()
+        self.assertIn("Cordai", csv_content)
+        self.assertIn("Academic Advising", csv_content)
+        self.assertNotIn("Amara", csv_content)
+        self.assertNotIn("IT Help Desk", csv_content)
